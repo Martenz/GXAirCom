@@ -1,9 +1,11 @@
 #ifndef __SCREENTFT_H__
 #define __SCREENTFT_H__
 
+#include <Arduino.h>
 #include <TFT_eSPI.h> // Hardware-specific library
 #include <bl.h>
 #include <icons.h>
+#include "main.h"
 
 #define TFT_WIDTH           240
 #define TFT_HEIGHT          240
@@ -24,9 +26,13 @@ public:
   TFT_eSPI *tft = nullptr;
   BackLight *bl = nullptr;
   bool begin();
+  void end(void);
+  void run(void); //has to be called cyclic
 
 private:
   bool bInit;
+  uint8_t blLevel;
 };
 
-#endif 
+#endif
+

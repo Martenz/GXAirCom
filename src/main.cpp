@@ -74,10 +74,10 @@
 #endif
 
 // Test T-Watch 2019 conf
+#ifdef SCREENTFT
 #include <ScreenTFT.h>
-ScreenTFT twatchScreen;
 // Test T-Watch conf End.
-
+#endif
 
 #ifdef GSMODULE
 
@@ -298,6 +298,7 @@ TaskHandle_t xHandleBluetooth = NULL;
 TaskHandle_t xHandleMemory = NULL;
 TaskHandle_t xHandleEInk = NULL;
 TaskHandle_t xHandleLogger = NULL;
+TaskHandle_t xHandleScreenTFT = NULL;
 TaskHandle_t xHandleWeather = NULL;
 
 SemaphoreHandle_t xOutputMutex;
@@ -322,6 +323,9 @@ void taskBaro(void *pvParameters);
 #endif
 #ifdef EINK
 void taskEInk(void *pvParameters);
+#endif
+#ifdef SCREENTFT
+void taskScreenTFT(void *pvParameters);
 #endif
 #ifdef LOGGER
 void taskLogger(void *pvParameters);
@@ -1992,6 +1996,9 @@ void setup() {
 
     // Lilygo T3 v2.1.1.6 extra button on 0
     sButton[1].PinButton = 0;
+    #ifdef SCREENTFT
+    sButton[1].PinButton = 36;
+    #endif
 
     i2cOLED.begin(PinOledSDA, PinOledSCL);
     // voltage-divier 100kOhm and 100kOhm
@@ -2271,7 +2278,9 @@ xOutputMutex = xSemaphoreCreateMutex();
 #endif
 
 /// TEST T-Watch init
-twatchScreen.begin();
+#ifdef SCREENTFT
+  xTaskCreatePinnedToCore(taskScreenTFT, "taskScreenTFT", 6500, NULL, 8, &xHandleScreenTFT, ARDUINO_RUNNING_CORE1); //background EInk
+#endif
 /// TEST T-Watch init end.
 
 }
@@ -4722,14 +4731,16 @@ void powerOff(){
   #endif
   eTaskState tWeather = eDeleted;
   eTaskState tLogger = eDeleted;
+  eTaskState tScreenTFT = eDeleted;
   while(1){
     //wait until all tasks are stopped
     if (xHandleLogger != NULL) tLogger = eTaskGetState(xHandleLogger);
+    if (xHandleScreenTFT != NULL) tScreenTFT = eTaskGetState(xHandleScreenTFT);
     if (xHandleBaro != NULL) tBaro = eTaskGetState(xHandleBaro);
     if (xHandleEInk != NULL) tEInk = eTaskGetState(xHandleEInk);
     if (xHandleStandard != NULL) tStandard = eTaskGetState(xHandleStandard);
     if (xHandleWeather != NULL) tWeather = eTaskGetState(xHandleWeather);    
-    if ((tLogger == eDeleted) && (tBaro == eDeleted) && (tEInk == eDeleted) && (tWeather == eDeleted) && (tStandard == eDeleted)) break; //now all tasks are stopped    
+    if ((tScreenTFT == eDeleted) && (tLogger == eDeleted) && (tBaro == eDeleted) && (tEInk == eDeleted) && (tWeather == eDeleted) && (tStandard == eDeleted)) break; //now all tasks are stopped    
     log_i("logger=%d,baro=%d,eink=%d,standard=%d,weather=%d",tLogger,tBaro,tEInk,tStandard,tWeather);
     delay(1000);
   }
@@ -4817,6 +4828,22 @@ void powerOff(){
   esp_deep_sleep_start();
 
 }
+
+#ifdef SCREENTFT
+void taskScreenTFT(void * pvPArameters){
+  ScreenTFT twatchScreen;
+  twatchScreen.begin();
+  delay(10);
+  while(1){
+    twatchScreen.run();
+    delay(500);
+    if ((WebUpdateRunning) || (bPowerOff)) break;
+  }
+  if (bPowerOff) twatchScreen.end();
+  log_i("stop task");
+  vTaskDelete(xHandleScreenTFT);
+}
+#endif
 
 #ifdef LOGGER
 // logger task to manage new and update of igc track log
