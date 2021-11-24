@@ -73,6 +73,11 @@
 #include "driver/rtc_io.h"
 #endif
 
+// Test T-Watch 2019 conf
+#include <ScreenTFT.h>
+ScreenTFT twatchScreen;
+// Test T-Watch conf End.
+
 
 #ifdef GSMODULE
 
@@ -2264,6 +2269,11 @@ xOutputMutex = xSemaphoreCreateMutex();
   //start Gsm-task
   xTaskCreatePinnedToCore(taskGsm, "taskGsm", 4096, NULL, 3, &xHandleGsm, ARDUINO_RUNNING_CORE1);
 #endif
+
+/// TEST T-Watch init
+twatchScreen.begin();
+/// TEST T-Watch init end.
+
 }
 
 
