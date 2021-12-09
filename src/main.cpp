@@ -1969,12 +1969,14 @@ void setup() {
     break;
   case BOARD_T_BEAM_V07:
     log_i("Board=T_BEAM_V07/TTGO_T3_V1_6");
-    PinLoraRst = 23;
-    PinLoraDI0 = 26;
-    PinLora_SS = 18;
-    PinLora_MISO = 19;
-    PinLora_MOSI = 27;
-    PinLora_SCK = 5;
+    #ifndef SCREENTFT
+      PinLoraRst = 23;
+      PinLoraDI0 = 26;
+      PinLora_SS = 18;
+      PinLora_MISO = 19;
+      PinLora_MOSI = 27;
+      PinLora_SCK = 5;
+    #endif
 
     PinOledRst = -1;
     PinOledSDA = 21;
@@ -1983,6 +1985,10 @@ void setup() {
     // moving SCL SDA to different GPIO to avoid conflicts with mounted SD card on Lilygo T3 v2.1.1.6
     PinBaroSDA = 3; //13 3;
     PinBaroSCL = 4; //14 23;
+    #ifdef SCREENTFT
+      PinBaroSDA = 25; 
+      PinBaroSCL = 26;
+    #endif
     // set gpio 4 as INPUT
     pinMode(PinBaroSCL, INPUT_PULLUP);
     PinADCVoltage = 35;
@@ -1997,7 +2003,7 @@ void setup() {
     // Lilygo T3 v2.1.1.6 extra button on 0
     sButton[1].PinButton = 0;
     #ifdef SCREENTFT
-    sButton[1].PinButton = 36;
+      sButton[1].PinButton = 36;
     #endif
 
     i2cOLED.begin(PinOledSDA, PinOledSCL);
@@ -2252,6 +2258,11 @@ xOutputMutex = xSemaphoreCreateMutex();
     #ifdef LOGGER
       xTaskCreatePinnedToCore(taskLogger, "taskLogger", 6500, NULL, 4, &xHandleLogger, ARDUINO_RUNNING_CORE1); //background Logger
     #endif  
+    /// TEST T-Watch init
+    #ifdef SCREENTFT
+      xTaskCreatePinnedToCore(taskScreenTFT, "taskScreenTFT", 6500, NULL, 11, &xHandleScreenTFT, ARDUINO_RUNNING_CORE1); //background EInk
+    #endif
+    /// TEST T-Watch init end.
 
     xTaskCreatePinnedToCore(taskBaro, "taskBaro", 6500, NULL, 9, &xHandleBaro, ARDUINO_RUNNING_CORE1); //high priority task
   }
@@ -2276,12 +2287,6 @@ xOutputMutex = xSemaphoreCreateMutex();
   //start Gsm-task
   xTaskCreatePinnedToCore(taskGsm, "taskGsm", 4096, NULL, 3, &xHandleGsm, ARDUINO_RUNNING_CORE1);
 #endif
-
-/// TEST T-Watch init
-#ifdef SCREENTFT
-  xTaskCreatePinnedToCore(taskScreenTFT, "taskScreenTFT", 6500, NULL, 8, &xHandleScreenTFT, ARDUINO_RUNNING_CORE1); //background EInk
-#endif
-/// TEST T-Watch init end.
 
 }
 
@@ -4055,6 +4060,10 @@ void taskStandard(void *pvParameters){
       // moving gpio for GPS back to 34 to avoid conflicts with SD pins on LilyGo T3 v2.1.1.6
       PinGPSRX = 34;//12;
       PinGPSTX = 39;//15;
+      #ifdef SCREENTFT // Twatch rx tx gps for S7XG_Lora & GPS
+        PinGPSRX = 34;//12;
+        PinGPSTX = 33;//15;      
+      #endif
     }
   }
   if (PinGPSRX >= 0){
@@ -4105,7 +4114,10 @@ void taskStandard(void *pvParameters){
   fanet.setRFMode(setting.RFMode);
   uint8_t radioChip = RADIO_SX1276;
   if (setting.boardType == BOARD_T_BEAM_SX1262) radioChip = RADIO_SX1262;
+  // TENZ TEST
+  #ifndef SCREENTFT
   fanet.begin(PinLora_SCK, PinLora_MISO, PinLora_MOSI, PinLora_SS,PinLoraRst, PinLoraDI0,frequency,setting.LoraPower,radioChip);
+  #endif
   fanet.setPilotname(setting.PilotName);
   fanet.setAircraftType(setting.AircraftType);
   fanet.autoSendName = true;

@@ -1,3 +1,13 @@
+/*!
+ * @file ScreenTFT.h
+ *
+ *
+ */
+
+extern struct SettingsData setting;
+extern struct statusData status;
+
+
 #ifndef __SCREENTFT_H__
 #define __SCREENTFT_H__
 
@@ -18,13 +28,13 @@
 #define TFT_BL              (gpio_num_t)12
 
 #define DRV 0x7789 // 0x9A01 
-#define FREQ 27000000 // 40000000 //  
+#define FREQ 27000000 // 40000000  
 
 class ScreenTFT {
 public:
   ScreenTFT(); //constructor
-  TFT_eSPI *tft = nullptr;
-  BackLight *bl = nullptr;
+  TFT_eSPI *tft = NULL;
+  BackLight *bl = NULL;
   bool begin();
   void end(void);
   void run(void); //has to be called cyclic
@@ -32,6 +42,12 @@ public:
 private:
   bool bInit;
   uint8_t blLevel;
+  char vol[5];
+  char myid[10];
+  void doInitScreenTFT(void);
+  void drawHeader(void);
+  void updateScreenTFT(void);
+  void writeMssg(uint8_t y, char* label, char* msg);
 };
 
 #endif
