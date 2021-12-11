@@ -15,32 +15,45 @@ bool Logger::begin(){
   lStop = true;
   ltest = false;
 
-  strcpy(igcPAth,"/test.igc");
+  strcpy(igcPath, IGCFOLDER);
+  strcat(igcPath,"/test.igc");
 
   log_i("IGC - Initialization done.");
   uint8_t cardType = SD_MMC.cardType();
 
-    if(cardType == CARD_NONE){
-        log_i("No SD_MMC card attached");
-    }
+  if(cardType == CARD_NONE){
+      log_i("No SD_MMC card attached");
+      return false;
+  }
 
-    log_i("SD_MMC Card Type: ");
-    if(cardType == CARD_MMC){
-        log_i("MMC");
-    } else if(cardType == CARD_SD){
-        log_i("SDSC");
-    } else if(cardType == CARD_SDHC){
-        log_i("SDHC");
-    } else {
-        log_i("UNKNOWN");
-    }
+  log_i("SD_MMC Card Type: ");
+  if(cardType == CARD_MMC){
+      log_i("MMC");
+  } else if(cardType == CARD_SD){
+      log_i("SDSC");
+  } else if(cardType == CARD_SDHC){
+      log_i("SDHC");
+  } else {
+      log_i("UNKNOWN");
+  }
 
-    uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
-    log_i("SD_MMC Card Size: %10dMB", cardSize);
+  uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
+  log_i("SD_MMC Card Size: %10dMB", cardSize);
 
-    char* testigc = igcHeaders();
-    writeFile(SD_MMC, igcPAth, testigc);
-    listFiles(SD_MMC,"/");
+  createDir(SD_MMC, IGCFOLDER);
+
+  char* testigc = igcHeaders();
+  writeFile(SD_MMC, igcPath, testigc);
+   char igc_dir[32];
+   strcpy(igc_dir,IGCFOLDER);
+   //strcat(igc_dir,"/");
+   Serial.println("### IGC FOLDER ###");
+   Serial.println(igc_dir);
+  listFiles(SD_MMC,igc_dir);
+
+  //sha256
+  mbedtls_md_context_t ctx;
+  mbedtls_md_type_t md_type = MBEDTLS_MD_SHA256;
 
   return true;
 };
@@ -69,8 +82,8 @@ void Logger::run(void){
     int8_t fnum = 0;
     char fnumc[3];
     while (1){
-      char trackFile[32];
-      strcpy(trackFile,"/");
+      char trackFile[64];
+      strcpy(trackFile,"/gxAirLogs/");
       strcat(trackFile,status.GPS_Date);
       strcat(trackFile,"_");
       strcat(trackFile,itoa(fnum,fnumc,10));
@@ -82,8 +95,8 @@ void Logger::run(void){
         fnum+=1;
       }else{
         log_i("File to write: %s",trackFile);
-        strcpy(igcPAth,trackFile);
-        doInitLogger(igcPAth);
+        strcpy(igcPath,trackFile);
+        doInitLogger(igcPath);
         // write only one log for 30 seconds (ignoring flying status)
         ltest = false;
         break;
@@ -251,7 +264,7 @@ void Logger::updateLogger(void){
 
   strcat(row,"\r");
 
-  appendFile(SD_MMC, igcPAth, row);
+  appendFile(SD_MMC, igcPath, row);
 
   // G update
   g_time += (int)status.GPS_Time[strlen(status.GPS_Time)-1];
@@ -270,8 +283,17 @@ void Logger::doStopLogger(void){
   //TODO create the algorithm to write security based on data
 
   log_i("Closing igc file with security line G");
-  appendFile(SD_MMC, igcPAth, row);
+  appendFile(SD_MMC, igcPath, row);
 
+}
+
+void Logger::createDir(fs::FS &fs, const char * path){
+    Serial.printf("Creating Dir: %s\n", path);
+    if(fs.mkdir(path)){
+        Serial.println("Dir created");
+    } else {
+        Serial.println("mkdir failed");
+    }
 }
 
 void Logger::writeFile(fs::FS &fs, const char * path, const char * message){
@@ -344,5 +366,43 @@ void Logger::listFiles(fs::FS &fs, const char * dirname){
     return;
 }
 
-// TODO! download igcfiles form server
+//download igcfiles form server
 //https://github.com/G6EJD/ESP32-8266-File-Download/blob/master/ESP_File_Download_v01.ino
+
+// void Logger::initHash(void){
+//   char *payload = "initPrivateKey";
+
+//   const size_t payloadLength = strlen(payload);
+   
+//   mbedtls_md_init(&ctx);
+//   mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(md_type), 0);
+//   mbedtls_md_starts(&ctx);
+//   mbedtls_md_update(&ctx, (const unsigned char *) payload, payloadLength);
+//   Serial.println(payload);
+// }
+
+// void Logger::updateHash(char* payload){
+//   Serial.println(payload);
+//   const size_t payloadLength = strlen(payload);
+//   mbedtls_md_update(&ctx, (const unsigned char *) payload, payloadLength);  
+// }
+
+// void Logger::closeHash(void){
+//   mbedtls_md_finish(&ctx, shaResult);
+//   mbedtls_md_free(&ctx);  
+
+//   //Serial.print("Hash: ");
+//   strcpy(gcodeRow,"G");
+   
+//   for(int i= 0; i< sizeof(shaResult); i++)
+//   {
+//   char str[3];
+//   sprintf(str, "%02x", (int)shaResult[i]);
+//   //Serial.print(str);
+//   strcat(gcodeRow,str);
+//   }
+  
+//   Serial.println("");
+//   Serial.print("Hash char: ");
+//   Serial.println(gcodeRow);
+// }

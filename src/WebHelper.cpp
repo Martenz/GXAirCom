@@ -567,7 +567,9 @@ String processor(const String& var){
     return String(compile_date);
   }else if (var == "IGCFILELIST"){
     // TODO list all igc files and create link to download
-    logger.listFiles(SD_MMC,"/");
+    char igc_dir[32];
+    strcpy(igc_dir,IGCFOLDER);
+    logger.listFiles(SD_MMC,igc_dir);
     sRet = "";
     char* d = strtok(logger.igclist, ";");
     sRet += "<table><thead><tr><th>Download</th><th>Delete</th></tr></thead><tbody>";

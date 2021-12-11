@@ -4825,12 +4825,13 @@ void taskLogger(void * pvPArameters){
     SD_MMC.begin("/sdcard", true);
   }
 
-  logger.begin();
-  delay(10);
-  while(1){
-    logger.run();
-    delay(900);
-    if ((WebUpdateRunning) || (bPowerOff)) break;
+  if(logger.begin()){
+    delay(10);
+    while(1){
+      logger.run();
+      delay(900);
+      if ((WebUpdateRunning) || (bPowerOff)) break;
+    }
   }
   if (bPowerOff) logger.end();
   log_i("stop task");

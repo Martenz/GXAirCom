@@ -15,8 +15,11 @@ extern struct statusData status;
 #include <Arduino.h>
 #include "FS.h"
 #include "SD_MMC.h"
+#include "mbedtls/md.h"
 #include "main.h"
 
+//default folder for igc files
+#define IGCFOLDER "/GxAirLogs"
 // Manufacturer code, use XXX if you don't have one. ABC is the unique code for this logger (serial no.?), rest of line can be anything you like
 #define IGC_ROW1 "AXXXGXO "
 // fix accuracy in m 
@@ -72,14 +75,25 @@ class Logger{
     uint32_t g_baroalt;
     uint32_t g_gpsalt;
 
-    char igcPAth[32];
+    char igcPath[64];
     uint32_t gotflytime;
     void doInitLogger(const char * trackFile);
     void updateLogger(void);
     void doStopLogger(void);
     void writeFile(fs::FS &fs, const char * path, const char * message);
     void appendFile(fs::FS &fs, const char * path, const char * message);
+    void createDir(fs::FS &fs, const char * path);
     char* igcHeaders();
+
+    void initHash(void);
+    void updateHash(char* payload);
+    void closeHash(void);
+    mbedtls_md_context_t ctx;
+    mbedtls_md_type_t md_type;
+    byte shaResult[32];
+    char gcodeRow[79];
+    bool hashend = false;
+
 };
 
 #endif
