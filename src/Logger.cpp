@@ -369,40 +369,42 @@ void Logger::listFiles(fs::FS &fs, const char * dirname){
 //download igcfiles form server
 //https://github.com/G6EJD/ESP32-8266-File-Download/blob/master/ESP_File_Download_v01.ino
 
-// void Logger::initHash(void){
-//   char *payload = "initPrivateKey";
+void Logger::initHash(void){
+  const char *payload = "initPrivateKey";
 
-//   const size_t payloadLength = strlen(payload);
+  const size_t payloadLength = strlen(payload);
    
-//   mbedtls_md_init(&ctx);
-//   mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(md_type), 0);
-//   mbedtls_md_starts(&ctx);
-//   mbedtls_md_update(&ctx, (const unsigned char *) payload, payloadLength);
-//   Serial.println(payload);
-// }
+  mbedtls_md_init(&ctx);
+  mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(md_type), 0);
+  mbedtls_md_starts(&ctx);
+  mbedtls_md_update(&ctx, (const unsigned char *) payload, payloadLength);
+  Serial.println(payload);
+}
 
-// void Logger::updateHash(char* payload){
-//   Serial.println(payload);
-//   const size_t payloadLength = strlen(payload);
-//   mbedtls_md_update(&ctx, (const unsigned char *) payload, payloadLength);  
-// }
+void Logger::updateHash(char* payload){
+  Serial.println(payload);
+  const size_t payloadLength = strlen(payload);
+  mbedtls_md_update(&ctx, (const unsigned char *) payload, payloadLength);  
+}
 
-// void Logger::closeHash(void){
-//   mbedtls_md_finish(&ctx, shaResult);
-//   mbedtls_md_free(&ctx);  
+void Logger::closeHash(void){
+  mbedtls_md_finish(&ctx, shaResult);
+  mbedtls_md_free(&ctx);  
 
-//   //Serial.print("Hash: ");
-//   strcpy(gcodeRow,"G");
+  char gcodeRow[79];
+
+  //Serial.print("Hash: ");
+  strcpy(gcodeRow,"G");
    
-//   for(int i= 0; i< sizeof(shaResult); i++)
-//   {
-//   char str[3];
-//   sprintf(str, "%02x", (int)shaResult[i]);
-//   //Serial.print(str);
-//   strcat(gcodeRow,str);
-//   }
+  for(int i= 0; i< sizeof(shaResult); i++)
+  {
+  char str[3];
+  sprintf(str, "%02x", (int)shaResult[i]);
+  //Serial.print(str);
+  strcat(gcodeRow,str);
+  }
   
-//   Serial.println("");
-//   Serial.print("Hash char: ");
-//   Serial.println(gcodeRow);
-// }
+  Serial.println("");
+  Serial.print("Hash char: ");
+  Serial.println(gcodeRow);
+}

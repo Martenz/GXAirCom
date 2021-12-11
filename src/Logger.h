@@ -91,7 +91,6 @@ class Logger{
     mbedtls_md_context_t ctx;
     mbedtls_md_type_t md_type;
     byte shaResult[32];
-    char gcodeRow[79];
     bool hashend = false;
 
 };
