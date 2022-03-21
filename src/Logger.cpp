@@ -44,6 +44,10 @@ bool Logger::begin(){
 
   char* testigc = igcHeaders();
   writeFile(SD_MMC, igcPath, testigc);
+  initHash();
+  char* gsha256 = closeHash();
+  appendFile(SD_MMC, igcPath, gsha256);
+
    char igc_dir[32];
    strcpy(igc_dir,IGCFOLDER);
    //strcat(igc_dir,"/");
@@ -181,6 +185,10 @@ void Logger::doInitLogger(const char * trackFile){
   g_baroalt = 0;
   g_gpsalt = 0;
   writeFile(SD_MMC, trackFile, newigc);
+
+  //Start New Hash sha256
+  initHash();
+
 };
 
 void Logger::updateLogger(void){
@@ -266,6 +274,7 @@ void Logger::updateLogger(void){
 
   appendFile(SD_MMC, igcPath, row);
 
+  updateHash(row);
   // G update
   g_time += (int)status.GPS_Time[strlen(status.GPS_Time)-1];
   g_latlon += (int)lat_m[strlen(lat_m)-1];
@@ -275,15 +284,16 @@ void Logger::updateLogger(void){
 }
 
 void Logger::doStopLogger(void){
+
+  //Close Hash sha256
+  char* gsha256 = closeHash();
+
   // add igc security line
   // close igc file and rename to .igc to be downloadable
-  static char row[256];
-  strcpy(row,"G");
-
   //TODO create the algorithm to write security based on data
 
   log_i("Closing igc file with security line G");
-  appendFile(SD_MMC, igcPath, row);
+  appendFile(SD_MMC, igcPath, gsha256);
 
 }
 
@@ -387,11 +397,11 @@ void Logger::updateHash(char* payload){
   mbedtls_md_update(&ctx, (const unsigned char *) payload, payloadLength);  
 }
 
-void Logger::closeHash(void){
+char * Logger::closeHash(){
   mbedtls_md_finish(&ctx, shaResult);
   mbedtls_md_free(&ctx);  
 
-  char gcodeRow[79];
+  static char gcodeRow[79];
 
   //Serial.print("Hash: ");
   strcpy(gcodeRow,"G");
@@ -407,4 +417,6 @@ void Logger::closeHash(void){
   Serial.println("");
   Serial.print("Hash char: ");
   Serial.println(gcodeRow);
+
+  return gcodeRow;
 }

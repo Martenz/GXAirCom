@@ -905,9 +905,11 @@ void drawBatt(int16_t x, int16_t y,uint8_t value){
     display.print((status.vBatt%1000)/10);
     display.print("V");
 
-    display.setCursor(x-5,y+18);
-    display.print(String(status.varioTemp,0));
-    display.print("C");
+    if (status.vario.bHasVario){
+      display.setCursor(x-5,y+18);
+      display.print(String(status.varioTemp,0));
+      display.print("C");
+    }
 
     static uint8_t DrawValue = 0;
     if (value == 255){
@@ -4291,7 +4293,8 @@ void taskStandard(void *pvParameters){
         case 0: //main-Display
           if ((timeOver(tAct,tDisplay,DISPLAY_UPDATE_RATE)) || (oldScreenNumber != setting.screenNumber)){
             tDisplay = tAct;
-            printGPSData(tAct);          
+//            printGPSData(tAct);          
+            DrawRadarScreen(tAct,RADAR_CLOSEST);
           }
           break;
         case 1: //radar-screen with list
@@ -4303,7 +4306,8 @@ void taskStandard(void *pvParameters){
         case 2: //radar-screen with closest
           if ((timeOver(tAct,tDisplay,DISPLAY_UPDATE_RATE)) || (oldScreenNumber != setting.screenNumber)){
             tDisplay = tAct;
-            DrawRadarScreen(tAct,RADAR_CLOSEST);
+            printGPSData(tAct);          
+//            DrawRadarScreen(tAct,RADAR_CLOSEST);
           }
           break;
         case 3: //list aircrafts

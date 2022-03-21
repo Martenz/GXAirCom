@@ -87,7 +87,7 @@ class Logger{
 
     void initHash(void);
     void updateHash(char* payload);
-    void closeHash(void);
+    char* closeHash();
     mbedtls_md_context_t ctx;
     mbedtls_md_type_t md_type;
     byte shaResult[32];
