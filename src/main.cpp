@@ -4563,7 +4563,7 @@ void taskStandard(void *pvParameters){
   long frequency = FREQUENCY868;
   fanet.setRFMode(setting.RFMode);
   uint8_t radioChip = RADIO_SX1276;
-  if ((setting.boardType == eBoard::T_BEAM_SX1262) || (setting.boardType == eBoard::T_BEAM_S3CORE) || (setting.boardType == eBoard::HELTEC_WIRELESS_STICK_LITE_V3) || (setting.boardType == eBoard::HELTEC_LORA_V3)) radioChip = RADIO_SX1262;
+  if ((setting.boardType == eBoard::T_BEAM_SX1262) || (setting.boardType == eBoard::T_BEAM_S3CORE) || (setting.boardType == eBoard::HELTEC_WIRELESS_STICK_LITE_V3) || (setting.boardType == eBoard::HELTEC_LORA_V3) || (setting.boardType == eBoard::T3S3_SX1262_EPAPER)) radioChip = RADIO_SX1262;
 
   // When the requested Address type is ICAO then the devId of the device must be set to your mode-s address
   // See Flarm Dataport Specification for details
