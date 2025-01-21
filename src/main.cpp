@@ -1779,6 +1779,9 @@ void setup() {
   #ifdef S3CORE
     setting.boardType = T_BEAM_S3CORE;
   #endif
+  #ifdef T3S3EPAPER
+    setting.boardType = T3S3_SX1262_EPAPER;
+  #endif
   #ifdef WIRELESS_STICK_V3
     setting.boardType = HELTEC_WIRELESS_STICK_LITE_V3;
   #endif
@@ -2260,6 +2263,53 @@ void setup() {
     PinPMU_Irq = 40;
     PinBuzzer = 48;
     setupPMU();
+    /*
+    pI2cZero->begin(PinBaroSDA, PinBaroSCL);
+    while(1){
+      i2cScanner();
+      delay(5000);
+    }
+    */
+
+    break;
+  case eBoard::T3S3_SX1262_EPAPER:
+    log_i("Board=T3S3_SX1262_EPAPER");
+    //setting.displayType = eDisplay::OLED0_96;
+    PinGPSRX = 44;
+    PinGPSTX = 43;
+    //wakeup GPS
+//    pinMode(7,OUTPUT);
+//    digitalWrite(7,LOW);
+
+    PinPPS = 39;
+//E-Ink
+    PinEink_Busy   =  48;
+    PinEink_Rst    =  47;
+    PinEink_Dc     =  16;
+    PinEink_Cs     =  15;
+    PinEink_Clk    =  4;
+    PinEink_Din    =  11;
+
+    PinLoraRst = 8;
+    PinLoraDI0 = 33;
+    PinLoraGPIO = 34;
+    PinLora_SS = 7;
+    PinLora_MISO = 3;
+    PinLora_MOSI = 6;
+    PinLora_SCK = 5;
+
+    PinOledRst = -1;
+    PinOledSDA = -1; //OLED + BARO + RTC
+    PinOledSCL = -1; //OLED + BARO + RTC
+    //PinOledSDA = 42; //PMU
+    //PinOledSCL = 41; //PMU
+
+    PinBaroSDA = 41;
+    PinBaroSCL = 45;
+    pI2cOne->begin(PinBaroSDA, PinBaroSCL);
+//    PinPMU_Irq = 40;
+    PinBuzzer = 46;
+    //setupPMU();
     /*
     pI2cZero->begin(PinBaroSDA, PinBaroSCL);
     while(1){
