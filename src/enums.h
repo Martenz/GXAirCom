@@ -55,7 +55,8 @@ enum eDisplay{
   NO_DISPLAY = 0,
   OLED0_96 = 1,
   EINK2_9 = 2,
-  EINK2_9_V2 = 3
+  EINK2_9_V2 = 3,
+  EINK2_13 = 4
 };
 
 /* Wifi-Connect-Mode */

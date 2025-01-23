@@ -28,6 +28,12 @@ bool Screen::begin(uint8_t type,int8_t cs,int8_t dc,int8_t rst,int8_t busy,int8_
     //e_ink2.init(0); // needed to init upper level
     //pEInk = &e_ink2;
     log_i("display-type 2.9 V2");
+  }else if (type == 2){
+    GxEPD2_BW<GxEPD2_213_B74, GxEPD2_213_B74::HEIGHT> *e_ink = new GxEPD2_BW<GxEPD2_213_B74, GxEPD2_213_B74::HEIGHT>(GxEPD2_213_B74(cs, dc, rst, busy));
+    e_ink->epd2.init(clk, din, 0, true, false); // define or replace SW_SCK, SW_MOSI)
+    e_ink->init(0);
+    pEInk = e_ink;
+    log_i("CONFIG display-type 2.13 BW");
   }else{
     GxEPD2_BW<GxEPD2_290, GxEPD2_290::HEIGHT> *e_ink = new GxEPD2_BW<GxEPD2_290, GxEPD2_290::HEIGHT>(GxEPD2_290(cs, dc, rst, busy));
     e_ink->epd2.init(clk, din, 0, true, false); // define or replace SW_SCK, SW_MOSI)

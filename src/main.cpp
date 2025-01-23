@@ -1705,6 +1705,7 @@ void readPGXCFSentence(const char* data)
 void setup() {
 
   Serial.begin(115200);
+  delay(3000);
   status.restart.doRestart = false;
   status.bPowerOff = false;
   status.bWUBroadCast = false;
@@ -1781,6 +1782,9 @@ void setup() {
   #endif
   #ifdef T3S3EPAPER
     setting.boardType = T3S3_SX1262_EPAPER;
+    log_i("T3S3_SX1262_EPAPER");
+    setting.displayType = EINK2_13;
+    log_i("EINK2_13");
   #endif
   #ifdef WIRELESS_STICK_V3
     setting.boardType = HELTEC_WIRELESS_STICK_LITE_V3;
@@ -2274,20 +2278,17 @@ void setup() {
     break;
   case eBoard::T3S3_SX1262_EPAPER:
     log_i("Board=T3S3_SX1262_EPAPER");
-    //setting.displayType = eDisplay::OLED0_96;
     PinGPSRX = 44;
     PinGPSTX = 43;
-    //wakeup GPS
-//    pinMode(7,OUTPUT);
-//    digitalWrite(7,LOW);
-
     PinPPS = 39;
+
 //E-Ink
+    setting.displayType = EINK2_13;
     PinEink_Busy   =  48;
     PinEink_Rst    =  47;
     PinEink_Dc     =  16;
     PinEink_Cs     =  15;
-    PinEink_Clk    =  4;
+    PinEink_Clk    =  14;
     PinEink_Din    =  11;
 
     PinLoraRst = 8;
@@ -2297,6 +2298,12 @@ void setup() {
     PinLora_MISO = 3;
     PinLora_MOSI = 6;
     PinLora_SCK = 5;
+
+   pinMode(8,OUTPUT);
+   digitalWrite(8,LOW);
+   delay(50);
+   digitalWrite(8,HIGH);
+   delay(50);
 
     PinOledRst = -1;
     PinOledSDA = -1; //OLED + BARO + RTC
@@ -4665,7 +4672,7 @@ void taskStandard(void *pvParameters){
     #ifdef AIRMODULE    
     if (command.ConfigGPS == 1){    
       bool bCheckQuectelGps = true;
-      if ((setting.boardType ==  T_BEAM) || (setting.boardType ==  T_BEAM_V07)){
+      if ((setting.boardType ==  T_BEAM) || (setting.boardType ==  T_BEAM_V07) || (setting.boardType ==  T3S3_SX1262_EPAPER)){
         bCheckQuectelGps = false;
       }
       if (bCheckQuectelGps){
@@ -5474,10 +5481,17 @@ void testFileIO(fs::FS &fs, const char * path){
 // logger task to manage new and update of igc track log
 void taskLogger(void * pvPArameters){
 
+#ifdef T3S3EPAPER
+  #define SD_CS 13
+  #define SD_SCK 14
+  #define SD_MOSI 11
+  #define SD_MISO 2
+#else
   #define SD_CS 13
   #define SD_SCK 14
   #define SD_MOSI 15
   #define SD_MISO 2
+#endif
   pinMode(SD_CS, OUTPUT);
   pinMode(SD_SCK, OUTPUT);
   pinMode(SD_MOSI, OUTPUT);
@@ -5614,7 +5628,7 @@ void taskOled(void *pvParameters){
 
 #ifdef EINK
 void taskEInk(void *pvParameters){
-  if ((status.displayType != EINK2_9) && (status.displayType != EINK2_9_V2)){
+  if ((status.displayType != EINK2_9) && (status.displayType != EINK2_9_V2) && (status.displayType != EINK2_13)){
     log_i("stop task");
     vTaskDelete(xHandleEInk);
     return;
@@ -5622,6 +5636,8 @@ void taskEInk(void *pvParameters){
   Screen screen;
   if (setting.displayType == EINK2_9_V2){
     screen.begin(1,PinEink_Cs,PinEink_Dc,PinEink_Rst,PinEink_Busy,PinEink_Clk,PinEink_Din); //display-type 1
+  }else if (setting.displayType == EINK2_13){
+    screen.begin(2,PinEink_Cs,PinEink_Dc,PinEink_Rst,PinEink_Busy,PinEink_Clk,PinEink_Din); //display-type 2 (2.13)
   }else{
     screen.begin(0,PinEink_Cs,PinEink_Dc,PinEink_Rst,PinEink_Busy,PinEink_Clk,PinEink_Din);
   }  
