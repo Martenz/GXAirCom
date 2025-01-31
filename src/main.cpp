@@ -1780,7 +1780,7 @@ void setup() {
   #ifdef S3CORE
     setting.boardType = T_BEAM_S3CORE;
   #endif
-  #ifdef T3S3EPAPER
+  #ifdef LILYGO_S3_E_PAPER_V_1_0
     setting.boardType = T3S3_SX1262_EPAPER;
     log_i("T3S3_SX1262_EPAPER");
     setting.displayType = EINK2_13;
@@ -2280,7 +2280,7 @@ void setup() {
     log_i("Board=T3S3_SX1262_EPAPER");
     PinGPSRX = 44;
     PinGPSTX = 43;
-    PinPPS = 39;
+    PinPPS = -1;
 
 //E-Ink
     setting.displayType = EINK2_13;
@@ -2289,8 +2289,9 @@ void setup() {
     PinEink_Dc     =  16;
     PinEink_Cs     =  15;
     PinEink_Clk    =  14;
-    PinEink_Din    =  11;
+    PinEink_Din    =  11; // MOSI
 
+// LORA
     PinLoraRst = 8;
     PinLoraDI0 = 33;
     PinLoraGPIO = 34;
@@ -2299,11 +2300,8 @@ void setup() {
     PinLora_MOSI = 6;
     PinLora_SCK = 5;
 
-   pinMode(8,OUTPUT);
-   digitalWrite(8,LOW);
-   delay(50);
-   digitalWrite(8,HIGH);
-   delay(50);
+    pinMode(35, OUTPUT); // RADIO_POW_PIN
+    digitalWrite(35, HIGH); // RADIO_POW_PIN
 
     PinOledRst = -1;
     PinOledSDA = -1; //OLED + BARO + RTC
@@ -2311,19 +2309,14 @@ void setup() {
     //PinOledSDA = 42; //PMU
     //PinOledSCL = 41; //PMU
 
-    PinBaroSDA = 41;
-    PinBaroSCL = 45;
+    PinBaroSDA = 45;
+    PinBaroSCL = 46;
     pI2cOne->begin(PinBaroSDA, PinBaroSCL);
 //    PinPMU_Irq = 40;
-    PinBuzzer = 46;
-    //setupPMU();
-    /*
-    pI2cZero->begin(PinBaroSDA, PinBaroSCL);
-    while(1){
-      i2cScanner();
-      delay(5000);
-    }
-    */
+    PinBuzzer = 42;
+    PinADCVoltage = 1;
+    analogSetPinAttenuation(PinADCVoltage,ADC_11db);
+    adcVoltageMultiplier =  2.147f;
 
     break;
   case eBoard::HELTEC_WIRELESS_STICK_LITE_V3:
@@ -5481,7 +5474,7 @@ void testFileIO(fs::FS &fs, const char * path){
 // logger task to manage new and update of igc track log
 void taskLogger(void * pvPArameters){
 
-#ifdef T3S3EPAPER
+#ifdef LILYGO_S3_E_PAPER_V_1_0
   #define SD_CS 13
   #define SD_SCK 14
   #define SD_MOSI 11
@@ -5637,7 +5630,10 @@ void taskEInk(void *pvParameters){
   if (setting.displayType == EINK2_9_V2){
     screen.begin(1,PinEink_Cs,PinEink_Dc,PinEink_Rst,PinEink_Busy,PinEink_Clk,PinEink_Din); //display-type 1
   }else if (setting.displayType == EINK2_13){
-    screen.begin(2,PinEink_Cs,PinEink_Dc,PinEink_Rst,PinEink_Busy,PinEink_Clk,PinEink_Din); //display-type 2 (2.13)
+    log_i("T3S3 Epaper Sx1262 2.13");
+    pinMode(PinEink_Cs, OUTPUT);
+    SPI.begin(PinEink_Clk, -1, PinEink_Din,PinEink_Cs);
+    screen.begin(0,PinEink_Cs,PinEink_Dc,PinEink_Rst,PinEink_Busy,PinEink_Clk,PinEink_Din); //display-type 2 (2.13)
   }else{
     screen.begin(0,PinEink_Cs,PinEink_Dc,PinEink_Rst,PinEink_Busy,PinEink_Clk,PinEink_Din);
   }  
