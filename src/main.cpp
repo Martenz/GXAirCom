@@ -2280,7 +2280,10 @@ void setup() {
     log_i("Board=T3S3_SX1262_EPAPER");
     PinGPSRX = 44;
     PinGPSTX = 43;
-    PinPPS = -1;
+    pinMode(PinGPSRX,INPUT);
+    pinMode(PinGPSTX,OUTPUT);
+    digitalWrite(PinGPSTX,LOW);
+    PinPPS = 12;
 
 //E-Ink
     setting.displayType = EINK2_13;
@@ -2301,7 +2304,7 @@ void setup() {
     PinLora_SCK = 5;
 
     pinMode(35, OUTPUT); // RADIO_POW_PIN
-    digitalWrite(35, HIGH); // RADIO_POW_PIN
+    digitalWrite(35, LOW); // RADIO_POW_PIN
 
     PinOledRst = -1;
     PinOledSDA = -1; //OLED + BARO + RTC
@@ -2317,6 +2320,8 @@ void setup() {
     PinADCVoltage = 1;
     analogSetPinAttenuation(PinADCVoltage,ADC_11db);
     adcVoltageMultiplier =  2.147f;
+
+//    setupPMU();
 
     break;
   case eBoard::HELTEC_WIRELESS_STICK_LITE_V3:
@@ -4301,9 +4306,16 @@ bool setupQuectelGps(void){
 
 bool setupUbloxConfig(){
   SFE_UBLOX_GNSS ublox;
+#ifndef LILYGO_S3_E_PAPER_V_1_0
   NMeaSerial.begin(setting.gps.Baud,SERIAL_8N1,PinGPSRX,PinGPSTX,false); //reinit TX-Pin, cause maybe it is used twice
   ublox.begin(NMeaSerial);
   ublox.factoryReset();
+#else
+  // external GPS on RX 44 TX 43 QwiiC 
+  NMeaSerial.begin(setting.gps.Baud,SERIAL_8N1,PinGPSRX,PinGPSTX); //reinit TX-Pin, cause maybe it is used twice
+  ublox.begin(NMeaSerial);
+  //ublox.factoryReset();
+#endif
 
   delay(2000); //wait for hardware again !!
   for (int i = 0; i < 3; i++){
@@ -4665,7 +4677,7 @@ void taskStandard(void *pvParameters){
     #ifdef AIRMODULE    
     if (command.ConfigGPS == 1){    
       bool bCheckQuectelGps = true;
-      if ((setting.boardType ==  T_BEAM) || (setting.boardType ==  T_BEAM_V07) || (setting.boardType ==  T3S3_SX1262_EPAPER)){
+      if ((setting.boardType ==  T_BEAM) || (setting.boardType ==  T_BEAM_V07)){
         bCheckQuectelGps = false;
       }
       if (bCheckQuectelGps){

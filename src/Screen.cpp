@@ -46,7 +46,7 @@ bool Screen::begin(uint8_t type,int8_t cs,int8_t dc,int8_t rst,int8_t busy,int8_
 
 #else
     GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> *e_ink = new GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT>(GxEPD2_213_BN(/*CS=D8*/ 15, /*DC=D3*/ 16, /*RST=D4*/ 47, /*BUSY=D2*/ 48)); // GDEM029T94, Waveshare 2.9" V2 variant
-    e_ink->init(115200,true);
+    e_ink->init(0);
     pEInk = e_ink;
 
 #endif
