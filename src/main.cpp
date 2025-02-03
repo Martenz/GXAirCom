@@ -2283,7 +2283,7 @@ void setup() {
     pinMode(PinGPSRX,INPUT);
     pinMode(PinGPSTX,OUTPUT);
     digitalWrite(PinGPSTX,LOW);
-    PinPPS = 12;
+    PinPPS = 39;
 
 //E-Ink
     setting.displayType = EINK2_13;
@@ -2297,14 +2297,16 @@ void setup() {
 // LORA
     PinLoraRst = 8;
     PinLoraDI0 = 33;
-    PinLoraGPIO = 34;
+    PinLoraGPIO = 34; //36 35 no, (34,37)
     PinLora_SS = 7;
     PinLora_MISO = 3;
     PinLora_MOSI = 6;
     PinLora_SCK = 5;
 
-    pinMode(35, OUTPUT); // RADIO_POW_PIN
-    digitalWrite(35, LOW); // RADIO_POW_PIN
+    pinMode(35, OUTPUT);
+    digitalWrite(35, HIGH);
+
+    //SPI.begin(PinLora_SCK, PinLora_MISO, PinLora_MOSI);
 
     PinOledRst = -1;
     PinOledSDA = -1; //OLED + BARO + RTC
@@ -5644,7 +5646,6 @@ void taskEInk(void *pvParameters){
   }else if (setting.displayType == EINK2_13){
     log_i("T3S3 Epaper Sx1262 2.13");
     pinMode(PinEink_Cs, OUTPUT);
-    SPI.begin(PinEink_Clk, -1, PinEink_Din,PinEink_Cs);
     screen.begin(0,PinEink_Cs,PinEink_Dc,PinEink_Rst,PinEink_Busy,PinEink_Clk,PinEink_Din); //display-type 2 (2.13)
   }else{
     screen.begin(0,PinEink_Cs,PinEink_Dc,PinEink_Rst,PinEink_Busy,PinEink_Clk,PinEink_Din);

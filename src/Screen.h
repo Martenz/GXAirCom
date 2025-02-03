@@ -13,6 +13,7 @@ extern struct statusData status;
 #define __SCREEN_H__
 
 #include <Arduino.h>
+#include <SPI.h>
 #include <GxEPD2_BW.h>
 #include <Fonts/FreeSansBold9pt7b.h>
 #include <Fonts/FreeSansBold12pt7b.h>

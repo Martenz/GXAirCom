@@ -7,10 +7,37 @@
 #include "Screen.h"
 #include "tools.h"
 #include <icons.h>
+#include "FS.h"
+#include "SD.h"
+
+uint8_t DY_PILOT = 0;
+uint8_t DX_ICONS = 0;
 
 
-//GxEPD2_BW<GxEPD2_290, GxEPD2_290::HEIGHT> e_ink(GxEPD2_290(EINK_CS, EINK_DC, EINK_RST, EINK_BUSY));
-//GxEPD2_BW<GxEPD2_290_T94, GxEPD2_290_T94::HEIGHT> e_ink2(GxEPD2_290_T94(EINK_CS, EINK_DC, EINK_RST, EINK_BUSY));
+#ifdef LILYGO_S3_E_PAPER_V_1_0
+  #define EDP_BUSY_PIN            48
+  #define EDP_RSET_PIN            47
+  #define EDP_DC_PIN              16
+  #define EDP_CS_PIN              15
+  #define EDP_CLK_PIN             14 // CLK
+  #define EDP_MOSI_PIN            11 // MOSI
+  #define EDP_MISO_PIN            -1
+
+  #define SDCARD_MOSI             11
+  #define SDCARD_SCLK             14
+  #define SDCARD_MISO             2
+  #define SDCARD_CS               13
+
+  // Define the custom SPI bus (e.g., HSPI)
+  SPIClass EINKSPI(HSPI);
+
+  // Define the SPI settings
+  SPISettings EINKSPISETTINGS(20000000, MSBFIRST, SPI_MODE0);
+
+  // Define the e-ink display
+  GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> *e_ink = new GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT>(
+      GxEPD2_213_BN(/*CS=D8*/ 15, /*DC=D3*/ 16, /*RST=D4*/ 47, /*BUSY=D2*/ 48));
+#endif
 
 Screen::Screen(){
 }
@@ -45,9 +72,37 @@ bool Screen::begin(uint8_t type,int8_t cs,int8_t dc,int8_t rst,int8_t busy,int8_
   //e_ink3 = new GxEPD2_BW<GxEPD2_290_T94, GxEPD2_290_T94::HEIGHT>(GxEPD2_290_T94(EINK_CS, EINK_DC, EINK_RST, EINK_BUSY));
 
 #else
-    GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> *e_ink = new GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT>(GxEPD2_213_BN(/*CS=D8*/ 15, /*DC=D3*/ 16, /*RST=D4*/ 47, /*BUSY=D2*/ 48)); // GDEM029T94, Waveshare 2.9" V2 variant
-    e_ink->init(0);
-    pEInk = e_ink;
+
+  // Configure GPIO pins
+    pinMode(EDP_CS_PIN, OUTPUT);
+    digitalWrite(EDP_CS_PIN, HIGH); // Deselect device
+
+    pinMode(EDP_DC_PIN, OUTPUT);
+    digitalWrite(EDP_DC_PIN, LOW); // Initial state
+
+    pinMode(EDP_RSET_PIN, OUTPUT);
+    digitalWrite(EDP_RSET_PIN, HIGH); // Initial state
+
+    pinMode(EDP_BUSY_PIN, INPUT);
+
+//  EINKSPI.begin(EDP_CLK_PIN, EDP_MISO_PIN, EDP_MOSI_PIN,EDP_CS_PIN);
+    EINKSPI.begin(SDCARD_SCLK, SDCARD_MISO, SDCARD_MOSI, SDCARD_CS); // using sd to set HSPI to be able to use both SD and EINK
+  
+    // Test SD (not used for logger, T3S3 flash only 4MB not enough to enable also logger code)
+    if(!SD.begin(SDCARD_CS,EINKSPI)){
+        log_e("SD init failed");
+    }else {
+        log_i("SD init success");
+        log_i("SD Card insert:%.2f GB",SD.cardSize() / 1024.0 / 1024.0 / 1024.0);
+    }
+
+  // Select the custom SPI bus and settings for the e-ink display
+  e_ink->epd2.selectSPI(EINKSPI, EINKSPISETTINGS);
+
+  // Initialize the e-ink display
+  e_ink->init(115200);
+
+  pEInk = e_ink;
 
 #endif
 
@@ -232,8 +287,10 @@ void Screen::drawCompass(int16_t x, int16_t y, int16_t width, int16_t height,flo
   posy = y+height-1;
   pEInk->setCursor(x,posy);
   pEInk->print(sDir.c_str());
+  #ifndef LILYGO_S3_E_PAPER_V_1_0
   pEInk->setCursor(posx,posy);
   pEInk->print(sText.c_str());
+  #endif
 }
 
 void Screen::drawValue(int16_t x, int16_t y, int16_t width, int16_t height,float value,unsigned int decimals){
@@ -531,6 +588,11 @@ void Screen::drawWeatherScreen(void){
 }
 
 void Screen::drawMainScreen(void){
+
+#ifdef LILYGO_S3_E_PAPER_V_1_0
+  DY_PILOT = 25;
+  DX_ICONS = 14;
+#endif
   uint32_t tAct = millis();
   //static uint32_t tOldUpate = millis();
   int16_t posx = 0;
@@ -667,45 +729,45 @@ void Screen::drawMainScreen(void){
         do
         {
           pEInk->fillScreen(GxEPD_WHITE);
-          drawspeaker(49,0,16,16,data.volume);
-          drawflying(67,0,16,16,data.flying);
-          if (data.wifi) pEInk->drawXBitmap(85, 4,WIFI_bits,  14, 8, GxEPD_BLACK);
+          drawspeaker(49-DX_ICONS,0,16,16,data.volume);
+          drawflying(67-DX_ICONS,0,16,16,data.flying);
+          if (data.wifi) pEInk->drawXBitmap(85-DX_ICONS, 4,WIFI_bits,  14, 8, GxEPD_BLACK);
           if (data.bluetooth == 1){
-              pEInk->drawXBitmap(101, 3,BT_bits,  8, 10, GxEPD_BLACK);
+              pEInk->drawXBitmap(101-DX_ICONS, 3,BT_bits,  8, 10, GxEPD_BLACK);
           }else if (data.bluetooth == 2){
-              pEInk->fillRect(101, 3, 8, 10, GxEPD_BLACK);
-              pEInk->drawXBitmap(101, 3,BT_bits,  8, 10, GxEPD_WHITE);
+              pEInk->fillRect(101-DX_ICONS, 3, 8, 10, GxEPD_BLACK);
+              pEInk->drawXBitmap(101-DX_ICONS, 3,BT_bits,  8, 10, GxEPD_WHITE);
           }
-          drawBatt(111,4,17,8,data.battPercent);
+          drawBatt(111-DX_ICONS,4,17,8,data.battPercent);
           switch (setting.AircraftType)
           {
           case FanetLora::paraglider :
-              pEInk->drawXBitmap(0, 0, Paraglider16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
+              pEInk->drawXBitmap(0, DY_PILOT, Paraglider16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
               break;
           case FanetLora::hangglider :
-              pEInk->drawXBitmap(0, 0, Hangglider16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
+              pEInk->drawXBitmap(0, DY_PILOT, Hangglider16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
               break;
           case FanetLora::balloon :
-              pEInk->drawXBitmap(0, 0, Ballon16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
+              pEInk->drawXBitmap(0, DY_PILOT, Ballon16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
               break;
           case FanetLora::glider :
-              pEInk->drawXBitmap(0, 0, Sailplane16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
+              pEInk->drawXBitmap(0, DY_PILOT, Sailplane16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
               break;
           case FanetLora::poweredAircraft :
-              pEInk->drawXBitmap(0, 0, Airplane16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
+              pEInk->drawXBitmap(0, DY_PILOT, Airplane16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
               break;
           case FanetLora::helicopter :
-              pEInk->drawXBitmap(0, 0, Helicopter16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
+              pEInk->drawXBitmap(0, DY_PILOT, Helicopter16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
               break;
           case FanetLora::uav :
-              pEInk->drawXBitmap(0, 0, UAV16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
+              pEInk->drawXBitmap(0, DY_PILOT, UAV16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
               break;
 
           default:
-              pEInk->drawXBitmap(0, 0, UFO16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
+              pEInk->drawXBitmap(0, DY_PILOT, UFO16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
               break;
           }
-          drawSatCount(18,0,26,16,data.SatCount);
+          drawSatCount(18-DX_ICONS,0,26,16,data.SatCount);
           pEInk->drawFastHLine(0,52,pEInk->width(),GxEPD_BLACK);
           pEInk->setFont(&gnuvarioe23pt7b);
           drawValue(0,65,96,34,data.alt,0);
@@ -716,10 +778,18 @@ void Screen::drawMainScreen(void){
           pEInk->setFont(&gnuvarioe23pt7b);
           drawValue(0,163,96,34,data.speed,0);
           pEInk->drawFastHLine(0,198,pEInk->width(),GxEPD_BLACK);
-          drawFlightTime(0,213,128,34,data.flightTime);
-          pEInk->drawFastHLine(0,248,pEInk->width(),GxEPD_BLACK);
-          pEInk->setFont(&gnuvarioe18pt7b);
-          drawCompass(0,261,128,31,data.compass);
+          #ifdef LILYGO_S3_E_PAPER_V_1_0
+            drawFlightTime(0,215,80,34,data.flightTime);
+            drawCompass(74,215,48,31,data.compass);
+            pEInk->setFont(&NotoSans6pt7b);
+            pEInk->setCursor(74,208);
+            pEInk->print("Comp.");
+          #else
+            drawFlightTime(0,213,128,34,data.flightTime);
+            pEInk->drawFastHLine(0,248,pEInk->width(),GxEPD_BLACK);
+            pEInk->setFont(&gnuvarioe18pt7b);
+            drawCompass(0,261,128,31,data.compass);
+          #endif
           //pEInk->setFont(&FreeSansBold9pt7b);
           pEInk->setFont(&NotoSansBold6pt7b);
           pEInk->setCursor(posx,posy);
@@ -886,7 +956,14 @@ void Screen::drawspeaker(int16_t x, int16_t y, int16_t width, int16_t height,uin
 void Screen::drawFlightTime(int16_t x, int16_t y, int16_t width, int16_t height,uint32_t tTime){
     uint8_t min = (tTime / 60) % 60;
     uint8_t hours =  tTime / 3600;
-    if (width < 120){
+    if (width < 100){
+      pEInk->setFont(&gnuvarioe14pt7b);
+      pEInk->setCursor(x , y + height -1);
+      pEInk->printf("%02d",hours);
+      pEInk->setCursor(x + (width / 2) - 5,y + height -1);
+      pEInk->printf("%02d",min);
+    }
+    else if (width < 120){
       pEInk->setFont(&gnuvarioe18pt7b);
       pEInk->drawBitmap(x + (width / 2) - 8, y + (height / 2) - 8, hicons, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
       pEInk->setCursor(x + (width / 2) - 45,y + height -1);
