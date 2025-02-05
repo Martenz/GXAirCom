@@ -2283,7 +2283,7 @@ void setup() {
     pinMode(PinGPSRX,INPUT);
     pinMode(PinGPSTX,OUTPUT);
     digitalWrite(PinGPSTX,LOW);
-    PinPPS = 39;
+    PinPPS = -1;
 
 //E-Ink
     setting.displayType = EINK2_13;
@@ -5011,7 +5011,7 @@ void taskStandard(void *pvParameters){
       }
       if (ppsTriggered){
         ppsTriggered = false;
-        nmea.clearNewMsgValid();
+//        nmea.clearNewMsgValid();
         tLastPPS = tAct;      
         //log_i("PPS-Triggered t=%d",status.gps.tCycle);
       }
