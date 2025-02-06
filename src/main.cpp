@@ -137,20 +137,23 @@ SemaphoreHandle_t *PMUMutex = NULL;
 #ifdef AIRMODULE
 //Libraries for Vario
 #include <Baro.h>
-#include <beeper.h>
-#include <toneAC.h>
-
-#define USE_BEEPER
 
 char nmeaBuffer[100];
 MicroNMEA nmea(nmeaBuffer, sizeof(nmeaBuffer));
 
 Baro baro;
+
+#ifdef USE_BEEPER
+#include <beeper.h>
+#include <toneAC.h>
+
+//#define USE_BEEPER
+
 beeper Beeper(BEEP_VELOCITY_DEFAULT_SINKING_THRESHOLD,BEEP_VELOCITY_DEFAULT_CLIMBING_THRESHOLD,BEEP_VELOCITY_DEFAULT_NEAR_CLIMBING_SENSITIVITY,BEEP_DEFAULT_VOLUME);
 int freq = 2000;
 int channel = 0;
 int resolution = 8;
-
+#endif
 
 #endif
 uint8_t wifiCMD = 0;
@@ -3322,12 +3325,14 @@ void taskBaro(void *pvParameters){
   status.vario.bHasVario = false;    
   status.vario.bHasMPU = false;
 
+#ifdef USE_BEEPER
   ledcSetup(channel, freq, resolution);
   if (PinBuzzer >= 0){
     pinMode(PinBuzzer, OUTPUT);
     digitalWrite(PinBuzzer,LOW);
     ledcAttachPin(PinBuzzer, channel);
   }
+#endif  
   baro.useMPU(setting.vario.useMPU);
   #ifdef S3CORE
   uint8_t baroSensor = baro.begin(pI2cOne,&xI2C1Mutex);
@@ -3341,10 +3346,12 @@ void taskBaro(void *pvParameters){
       status.vario.bHasMPU = true;
     }
     status.vario.bHasVario = true;
+    #ifdef USE_BEEPER
     Beeper.setThresholds(setting.vario.sinkingThreshold,setting.vario.climbingThreshold,setting.vario.nearClimbingSensitivity);
     Beeper.setVolume(u8Volume);
     Beeper.setGlidingBeepState(true);
     //Beeper.setGlidingAlarmState(true);
+    #endif
   }else{
     log_i("no baro found --> end baro-task ");  
   }
@@ -3390,12 +3397,13 @@ void taskBaro(void *pvParameters){
         continue;
       }
       
-
+#ifdef USE_BEEPER
       if (((!status.flying) && (setting.vario.BeepOnlyWhenFlying)) || (status.bMuting)){
         Beeper.setVolume(0);
       }else{
         Beeper.setVolume(setting.vario.volume);
       }
+#endif
       baro.run();
       if (setting.vario.useMPU){
         baro.getMPUValues(&status.vario.accel[0],&status.vario.gyro[0],&status.vario.acc_Z);
