@@ -2325,6 +2325,7 @@ void setup() {
     PinADCVoltage = 1;
     analogSetPinAttenuation(PinADCVoltage,ADC_11db);
     adcVoltageMultiplier =  2.147f;
+    sButton[1].PinButton = 41;
 
 //    setupPMU();
 
