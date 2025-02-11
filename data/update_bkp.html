@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="style.css">
+<meta charset='utf-8'>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Tz Instruments - Update</title>
+</head>
+<body>
+<div id="needToRestart">%NEEDTORESTART%</div>
+<div id="loader">
+    <div id="background-wrap">
+        <div class="x1">
+            <div class="cloud">UPDATING</div>
+        </div>
+
+        <div class="x2">
+            <div class="cloud">UPDATING</div>
+        </div>
+
+        <div class="x3">
+            <div class="cloud">UPDATING</div>
+        </div>
+
+        <div class="x4">
+            <div class="cloud">UPDATING</div>
+        </div>
+
+        <div class="x5">
+            <div class="cloud">UPDATING</div>
+        </div>
+    </div>
+</div>
+<h1 class="header"><img src="/images/home.png"/> Instruments: Update</h1>
+<h3>Epaper for GxAirCom</h3>
+<p>%VERSION%</p>
+<div style="width:100&#37;">
+
+    <hr>
+    <p>
+        <a class="button" target="_blank" href="https://martenz.github.io/TzInstruments/">
+            Download Latest Firmware
+        </a>
+    </p>
+    
+        <p>1.</p>
+        <p>Upload spiff_vxxx.bin and Update.
+            <br>This will update webinterface and static files
+            <br>and will reset to factory all settings.
+        </p>
+        <p>2.</p>
+        <p>Upload firmware_vxxx_esp32dev.bin and Update.
+            <br>This will update the main firmware, 
+            <br>wait until the process ends and the TzI restarts.
+            <br>If the TzI does not restart itself please
+            <br>restart manually. 
+        </p>
+    
+    <form method='post' action='/update' enctype='multipart/form-data' id="update">
+        <input type='file' name='update' class="button" required>
+        <button id='btnUpdate' type='submit' class="button">start upgrade</button>
+    </form>
+    <hr>
+</div>
+<a class="button" href="/">Home</a>
+<footer>
+    <hr>
+    <p>Developed by %DEVELOPERINFO%<br>Last Update: %BUILD_TIMESTAMP%</p>
+</footer>
+</body>
+<script>
+ window.addEventListener('load', onLoad);
+ 
+
+ function callMainPage(){
+        window.location="/index.html";
+    }    
+
+ function onLoad(event) {
+    document.getElementById('update').addEventListener('submit', onUpdate);
+    var elem = document.getElementById('needToRestart')
+    var value = elem.innerHTML;
+    var restart = JSON.parse(value);
+    if (restart){   
+        elem.innerHTML = "RESTARTING";
+        elem.style.display = "block";
+        fetch('/restart');
+    }
+ }
+ function onUpdate(event){
+   if (confirm("Updating main Firmware will restart automatically the device. Updating just SPIFFS will update static files without a reboot. Continue?") == true) {
+    var loader = document.getElementById('loader');
+    loader.style.display = "block";
+    document.getElementById("btnUpdate").innerText  = "update is running ....";
+   }else{
+    event.preventDefault();
+   }
+
+//    event.preventDefault();
+//       var form = document.getElementById("update");
+//       var data = new FormData(form);
+//       $.ajax({
+//         url: '/fwupdate',
+//         type: 'POST',
+//         data: data,
+//         contentType: false,
+//         processData:false,
+//         xhr: function() {
+//           var xhr = new window.XMLHttpRequest();
+//           xhr.upload.addEventListener('progress', function(evt) {
+//           if (evt.lengthComputable) {
+//           var per = evt.loaded / evt.total;
+//           $('#prg').html('progress: ' + Math.round(per*100) + '&#37;');
+//         }
+//       }, false);
+//       return xhr;
+//     },
+//     success:function(d, s) {
+//       document.getElementById("btnUpdate").innerText  = "rebooting ...";
+//       var delay = 5000; /*wait 5 seconds until reconnect*/
+//       setTimeout( callMainPage, delay );
+//       console.log('success!');
+//    },
+//    error: function (a, b, c) {
+//    }
+//    });
+
+ }
+
+// $('form').submit(function(e){
+//       document.getElementById("btnUpdate").innerText  = "update is running ....";
+//       e.preventDefault();
+//       var form = $('#upload_form')[0];
+//       var data = new FormData(form);
+//       $.ajax({
+//         url: '/fwupdate',
+//         type: 'POST',
+//         data: data,
+//         contentType: false,
+//         processData:false,
+//         xhr: function() {
+//           var xhr = new window.XMLHttpRequest();
+//           xhr.upload.addEventListener('progress', function(evt) {
+//           if (evt.lengthComputable) {
+//           var per = evt.loaded / evt.total;
+//           $('#prg').html('progress: ' + Math.round(per*100) + '&#37;');
+//         }
+//       }, false);
+//       return xhr;
+//     },
+//     success:function(d, s) {
+//       document.getElementById("btnUpdate").innerText  = "rebooting ...";
+//       var delay = 5000; /*wait 5 seconds until reconnect*/
+//       setTimeout( callMainPage, delay );
+//       console.log('success!');
+//    },
+//    error: function (a, b, c) {
+//    }
+//    });
+//    });
+</script>
+</html>

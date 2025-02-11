@@ -5,6 +5,9 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
+#include <ArduinoJson.h>
+
+
 #define MAXSTRING 255
 #define MAXSIZEBLE 256 // same as local mtu
 
@@ -525,6 +528,9 @@ struct statusRtc{
 };
 
 struct statusData{
+  #ifdef TZICODE
+  StaticJsonDocument<2048> jsonSettings;
+#endif
   uint8_t displayType;
   statusNetwork wifiAP;
   statusWifi wifiSTA;

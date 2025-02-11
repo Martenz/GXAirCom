@@ -1,17 +1,34 @@
 #include <Arduino.h>
+#include <main.h>
 #include <HardwareSerial.h>
-#include <WiFi.h>
-//#include <esp_wifi.h>
-#include <WiFiClient.h>
-#include <WiFiUdp.h>
-#include <NTPClient.h>
+#ifndef TZICODE
+  #include <WiFi.h>
+  //#include <esp_wifi.h>
+  #include <WiFiClient.h>
+  #include <WiFiUdp.h>
+  #include <NTPClient.h>
+#endif
 #include <SPI.h>
 //#include <LoRa.h>
 #include <FanetLora.h>
 #include <FlarmDataPort.h>
-#include <main.h>
+// #include <main.h>
 #include <config.h>
-#include "WebHelper.h"
+
+#ifdef EINK
+#include <Screen.h>
+#endif
+#if defined(SSD1306) || defined(SH1106G)
+#include <oled.h>
+#endif
+
+#ifndef TZICODE
+ #include "WebHelper.h"
+#else
+ #include "wifiServer.h"
+ ///WifiServer
+ WifiServer wifiserver;
+#endif
 #include "fileOps.h"
 #include <SPIFFS.h>
 #ifdef BLUETOOTH
@@ -24,16 +41,19 @@
 #include <TimeLib.h>
 #include <sys/time.h>
 //#include <HTTPClient.h>
-#include <ArduinoHttpClient.h>
-
+#ifndef TZICODE
+ #include <ArduinoHttpClient.h>
+#endif
 #include "esp_system.h"
 #include "esp_spi_flash.h"
 #include "driver/adc.h"
 //#include "Update.h"
-#include "gxUpdater.h"
+#ifndef TZICODE
+ #include "gxUpdater.h"
+#endif
 #include "gxUserLed.h"
 #include <AceButton.h>
-#include <ArduinoJson.h>
+//#include <ArduinoJson.h>
 #include "../lib/GxMqtt/GxMqtt.h"
 
 #include "XPowersLib.h"
@@ -76,13 +96,6 @@ XPowersLibInterface *PMU = NULL;
   #endif
   TinyGsmClient GsmOGNClient(modem,2); //client number 0 for OGN
   TinyGsmClient GsmMqttClient(modem,3); //client number 3 for MQTT
-#endif
-
-#ifdef EINK
-#include <Screen.h>
-#endif
-#if defined(SSD1306) || defined(SH1106G)
-#include <oled.h>
 #endif
 
 //#define FLARMLOGGER
@@ -183,7 +196,9 @@ uint16_t battEmpty = 3300;
 
 Ogn ogn;
 
-gxUpdater updater;  
+#ifndef TZICODE
+ gxUpdater updater;  
+#endif
 gxUserLed userled;
 
 FanetLora::trackingData MyFanetData;  
@@ -395,7 +410,9 @@ void WiFiEvent(WiFiEvent_t event);
 //void listConnectedStations();
 float readBattvoltage();
 void sendAWTrackingdata(FanetLora::trackingData *FanetData);
+#ifndef TZICODE
 void sendTraccarTrackingdata(FanetLora::trackingData *FanetData);
+#endif
 void sendAWUdp(String msg);
 void checkFlyingState(uint32_t tAct);
 void sendFlarmData(uint32_t tAct);
@@ -983,6 +1000,7 @@ void sendAWGroundStationdata(uint32_t tAct){
 }
 #endif
 
+#ifndef TZICODE
 void sendTraccarTrackingdata(FanetLora::trackingData *FanetData){
 
   if ((!setting.traccarLiveTracking) || (!setting.TraccarSrv.startsWith("http://")) || (WiFi.status() != WL_CONNECTED) || (!status.bTimeOk)) return;
@@ -1042,6 +1060,7 @@ void sendTraccarTrackingdata(FanetLora::trackingData *FanetData){
   http.stop();
   //log_i("ready");
 }
+#endif
 
 void sendAWTrackingdata(FanetLora::trackingData *FanetData){
   if (!setting.awLiveTracking) return;
@@ -1307,6 +1326,7 @@ void IRAM_ATTR ppsHandler(void){
   ppsTriggered = true;
 }
 
+#ifndef TZICODE
 void WiFiEvent(WiFiEvent_t event){
   switch(event){
     case ARDUINO_EVENT_WIFI_READY:
@@ -1387,6 +1407,7 @@ void setupWifi(){
   WiFi.setHostname(host_name.c_str());
   log_i("setup Wifi ready !");
 }
+#endif
 
 void printSettings(){
   log_i("**** SETTINGS " VERSION " build:%s ******",&compile_date[0]);
@@ -3601,6 +3622,7 @@ bool printBattVoltage(uint32_t tAct){
   }
 }
 
+#ifndef TZICODE
 void setWifi(bool on){
   if ((on) && (!status.bWifiOn)){
     log_i("switch WIFI ON");
@@ -3691,6 +3713,7 @@ void setWifi(bool on){
   }
   wifiCMD = 0;
 }
+#endif
 
 size_t getNextString(char *ch_str,char *pSearch,char *buffer, size_t sizeBuffer){
   char *pChar = strstr(ch_str,pSearch);
@@ -4833,7 +4856,9 @@ void taskStandard(void *pvParameters){
       fanetTrackingData.devId = fanet._myData.devId;
       fanet.writeMsgType1(&fanetTrackingData);
       sendAWTrackingdata(&fanetTrackingData);
+#ifndef TZICODE
       sendTraccarTrackingdata(&fanetTrackingData);
+#endif
       sendFanetData = 0;
     }else if (sendFanetData == 2){
       log_i("sending msgtype 2 %s",fanetString.c_str());
@@ -5000,7 +5025,9 @@ void taskStandard(void *pvParameters){
           ogn.sendTrackingData(tFanetData.timestamp ,tFanetData.lat ,tFanetData.lon,tFanetData.altitude,tFanetData.speed,tFanetData.heading,tFanetData.climb,fanet.getDevId(tFanetData.devId) ,(Ogn::aircraft_t)fanet.getFlarmAircraftType(&tFanetData),tFanetData.addressType,tFanetData.OnlineTracking,(float)tFanetData.snr);
         } 
         sendAWTrackingdata(&tFanetData);
+#ifndef TZICODE
         sendTraccarTrackingdata(&tFanetData);
+#endif
       }else if (tFanetData.type >= 0x70){ //ground-tracking
         if (setting.OGNLiveTracking.bits.liveTracking){
           ogn.sendGroundTrackingData(tFanetData.timestamp,tFanetData.lat,tFanetData.lon,tFanetData.altitude,fanet.getDevId(tFanetData.devId),tFanetData.type,tFanetData.addressType,(float)tFanetData.snr);
@@ -5112,7 +5139,9 @@ void taskStandard(void *pvParameters){
               
             } 
             sendAWTrackingdata(&MyFanetData);
+#ifndef TZICODE
             sendTraccarTrackingdata(&MyFanetData);
+#endif
           }
           fanet.setMyTrackingData(&MyFanetData,geoidalt/1000.,gtPPS); //set Data on fanet
         }else{
@@ -5685,6 +5714,7 @@ void checkExtPowerOff(uint32_t tAct){
   }
 }
 
+#ifndef TZICODE
 void handleUpdate(uint32_t tAct){
   //static uint32_t tStartAutoUpdate = millis();
   static uint32_t tWait = 0;
@@ -5771,6 +5801,7 @@ void handleUpdate(uint32_t tAct){
     
   }
 }
+#endif
 
 void taskBackGround(void *pvParameters){
   static uint32_t tWifiCheck = millis();
@@ -5786,6 +5817,8 @@ void taskBackGround(void *pvParameters){
   Dusk2Dawn dusk2dawn(setting.gs.lat,setting.gs.lon, 0);
   uint8_t actDay = 0;
   #endif
+
+  #ifndef TZICODE
   WiFiUDP ntpUDP;
   NTPClient timeClient(ntpUDP);  
   
@@ -5798,15 +5831,34 @@ void taskBackGround(void *pvParameters){
     }
   #endif
 
+  #else
+    wifiserver.begin(0);
+  #endif
+
   tBattEmpty = millis();
+
+  #ifndef TZICODE
   tGetTime = millis() - GETNTPINTERVALL + 5000; //we refresh NTP-Time 5 sec. after internet is connected
   timeClient.begin();
+  #endif
+
   while (1){
     uint32_t tAct = millis();
+
+    #ifndef TZICODE
     if  (status.wifiSTA.state != IDLE){
       Web_loop();
     }
     handleUpdate(tAct);
+    #else
+      if( ((millis()/100)*100) % 1000 == 0){
+        //Serial.println("Clean Clients.");
+        wifiserver.wifiCleanClients();
+      }
+      if( ((millis()/100)*100) % 1000 == 0){
+        wifiserver.wifiNotifyClients();
+      }
+    #endif
     /*
     if (pMqtt){
       pMqtt->run(status.bInternetConnected);
@@ -5880,6 +5932,9 @@ void taskBackGround(void *pvParameters){
       }
     }
     #endif
+
+#ifndef TZICODE
+
     if ((status.wifiSTA.state == FULL_CONNECTED) || (status.modemstatus == eConnectionState::CONNECTED)){
       status.bInternetConnected = true;
     }else{
@@ -5999,6 +6054,8 @@ void taskBackGround(void *pvParameters){
         }
       }
     }
+
+#endif
     uint32_t actFreeHeap = xPortGetFreeHeapSize();
     uint32_t minFreeHeap = xPortGetMinimumEverFreeHeapSize();
     /*
@@ -6018,6 +6075,7 @@ void taskBackGround(void *pvParameters){
       esp_restart();
     }
 
+#ifndef TZICODE
     if (wifiCMD == 11) setWifi(true); //switch wifi on
     if (wifiCMD == 10) setWifi(false); //switch wifi off
     if (( tAct > (setting.wifi.tWifiStop * 1000)) && (setting.wifi.tWifiStop!=0) && (!WebUpdateRunning)){
@@ -6025,6 +6083,7 @@ void taskBackGround(void *pvParameters){
       log_i("currHeap:%d,minHeap:%d", xPortGetFreeHeapSize(), xPortGetMinimumEverFreeHeapSize());
       setWifi(false);
     }
+#endif
     //yield();
     if (status.bPowerOff){
       powerOff(); //power off, when battery is empty !!

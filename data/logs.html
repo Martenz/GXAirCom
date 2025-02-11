@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="style.css">
+<meta charset='utf-8'>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Tz Instruments - Logs</title>
+</head>
+<body>
+<h1 class="header"><img src="/images/home.png"/> Instruments: Track Logs</h1>
+<h3>Alti Vario GPS with SD IGC Logger</h3>
+<p>%VERSION%</p>
+<div style="width:100&#37;">
+    <hr>
+    <div class="centered">
+        %IGCFILELIST%
+    </div>
+    <hr>
+</div>
+<a class="button" href="/">Home</a>
+<footer>
+    <hr>
+    <p>Developed by %DEVELOPERINFO%<br>Last Update: %BUILD_TIMESTAMP%</p>
+</footer>
+</body>
+<script>
+    var links = document.querySelectorAll('a.igc_link');
+    links.forEach(function(element, index) {
+    // current DOM element
+        element.innerHTML = element.innerHTML.split("/").pop();
+    });
+    const queryString = window.location.search;
+    console.log(queryString);
+    const urlParams = new URLSearchParams(queryString);
+    var folder = urlParams.get('folder')
+    console.log(folder);
+    folder = folder ? folder : "root";
+    f_label = document.getElementById("folder_path")
+    f_label.innerHTML = folder;
+</script>
+</html>

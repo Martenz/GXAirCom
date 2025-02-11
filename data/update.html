@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="style.css">
+<meta charset='utf-8'>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Tz Instruments - Update</title>
+</head>
+<body>
+<div id="needToRestart">%NEEDTORESTART%</div>
+<div id="loader">
+    <div id="background-wrap">
+        <div class="x1">
+            <div class="cloud">UPDATING</div>
+        </div>
+
+        <div class="x2">
+            <div class="cloud">UPDATING</div>
+        </div>
+
+        <div class="x3">
+            <div class="cloud">UPDATING</div>
+        </div>
+
+        <div class="x4">
+            <div class="cloud">UPDATING</div>
+        </div>
+
+        <div class="x5">
+            <div class="cloud">UPDATING</div>
+        </div>
+    </div>
+</div>
+<h1 class="header"><img src="/images/home.png"/> Instruments: Update</h1>
+<h3>Epaper for GxAirCom</h3>
+<p>%VERSION%</p>
+<div style="width:100&#37;">
+
+    <hr>
+    <p>
+        <a class="button" target="_blank" href="https://martenz.github.io/TzInstruments/">
+            Download Latest Firmware
+        </a>
+    </p>
+    <p>See release notes for updates and binary install order (FIRMWARE and/or SPIFFS)</p>
+    <br>
+        <p>Upload <b>spiff_vxxx.bin</b> and Update.
+            <br>This will update webinterface and static files
+            <br>and will reset to factory all settings.
+        </p>
+        <br>
+        <p>Upload <b>firmware_vxxx_esp32dev.bin</b> and Update.
+            <br>This will update the main firmware, 
+            <br>wait until the process ends and the TzI restarts.
+            <br>If the TzI does not restart itself please
+            <br>restart manually. 
+        </p>
+    
+    <form method='post' action='/update' enctype='multipart/form-data' id="update">
+        <input id='files' type='file' name='update' class="button" required>
+        <button id='btnUpdate' type='submit' class="button">start upgrade</button>
+        <div class="result"></div>
+    </form>
+    <hr>
+</div>
+<a class="button" href="/">Home</a>
+<footer>
+    <hr>
+    <p>Developed by %DEVELOPERINFO%<br>Last Update: %BUILD_TIMESTAMP%</p>
+</footer>
+</body>
+<script>
+ 
+    const uploadForm = document.querySelector('#update');
+    const filesInput = uploadForm.querySelector('#files');
+
+    // Attach submit event handler to form
+    uploadForm.onsubmit = event => {
+        event.preventDefault();
+        // Make sure files are selected
+        if (!filesInput.files.length) {
+            alert('Please select a file!');
+        } else {
+            var loader = document.getElementById("loader");
+            loader.style.display = "block";
+            // Create the form object
+            let uploadFormDate = new FormData(uploadForm);
+            // Initiate the AJAX request
+            let request = new XMLHttpRequest();
+            // Ensure the request method is POST
+            request.open('POST', uploadForm.action);
+            // Attach the progress event handler to the AJAX request
+            request.upload.addEventListener('progress', event => {
+                // Add the current progress to the button
+                uploadForm.querySelector('button').innerHTML = 'Uploading... ' + '(' + String(Math.round((event.loaded/event.total)*100)) + '%%)';
+                // Update the progress bar
+                uploadForm.querySelector('button').style.background = 'linear-gradient(100deg, #71ae1e, #71ae1e ' + String(Math.round((event.loaded/event.total)*100)) + '%%, #663399 ' + String(Math.round((event.loaded/event.total)*100)) + '%%)';
+                // Disable the submit button
+                uploadForm.querySelector('button').disabled = true;
+                if (event.loaded == event.total) {
+                    uploadForm.querySelector('.result').innerHTML = "Update complete! Restarting ...";
+                    var clouds = document.getElementsByClassName("cloud");
+                    Array.from(clouds).forEach(c => c.innerHTML = "Restarting");
+                }
+            });
+            // The following code will execute when the request is complete
+            request.onreadystatechange = () => {
+                if (request.status == 200) {
+                    // Output the response message
+                    uploadForm.querySelector('.result').innerHTML = "Update complete!";
+                    var clouds = document.getElementsByClassName("cloud");
+                    Array.from(clouds).forEach(c => c.innerHTML = "Complete");
+                }
+            };
+            // Execute request
+            request.send(uploadFormDate);
+        }
+    };
+</script>
+</html>

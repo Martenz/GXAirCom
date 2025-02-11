@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="style.css">
+<meta charset='utf-8'>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Tz Instruments - Data</title>
+</head>
+<body>
+<h1 class="header"><img src="/images/home.png"/> Instruments: DATA</h1>
+<h3>Alti Vario GPS with SD IGC Logger</h3>
+<p>%VERSION%</p>
+<div style="width:100&#37;">
+    <hr>
+        <div class="centered">
+        <table style="width:auto;">
+            <tbody>
+                <tr>
+                    <td>Device Id</td><td id="dev_id"></td>
+                </tr>
+                <tr>
+                    <td>Running time</td><td id="run_time"></td>
+                </tr>
+                <tr>
+                    <td>GPS Time UTC+00</td><td id="gps_time"></td>
+                </tr>
+                <tr>
+                    <td>Battery PIN VBAT</td><td id="b_mv"></td>
+                </tr>
+                <tr>
+                    <td>Battery &#37;</td><td id="b_perc"></td>
+                </tr>
+                <tr>
+                    <td>Speaker Volume (0-255)</td><td id="spk_vol"></td>
+                </tr>
+                <tr>
+                    <td>Storage</td><td id="sd_size"></td>
+                </tr>
+                <tr>
+                    <td>GPS Fix</td><td id="gps_fix"></td>
+                </tr>
+                <tr>
+                    <td>GPS Satellites</td><td id="gps_sat"></td>
+                </tr>
+                <tr>
+                    <td>GPS Altitude m</td><td id="gps_alt"></td>
+                </tr>
+                <tr>
+                    <td>Barometric Altitude m</td><td id="baro_alt"></td>
+                </tr>
+                <tr>
+                    <td>Temperature °C</td><td id="temp_c"></td>
+                </tr>
+                <tr>
+                    <td>Pressure hPa</td><td id="pres_hpa"></td>
+                </tr>
+                
+            </tbody>
+        </table>
+       </div>
+    <hr>
+</div>
+<a class="button" href="/">Home</a>
+<footer>
+    <hr>
+    <p>Developed by %DEVELOPERINFO%<br>Last Update: %BUILD_TIMESTAMP%</p>
+</footer>
+</body>
+<script src="data.js"></script>
+</html>
