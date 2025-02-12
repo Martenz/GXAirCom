@@ -1,11 +1,12 @@
 #include <string.h>
 #include "enums.h"
+#include <ArduinoJson.h>
+
+
 //#include "../lib/FANETLORA/FanetLora.h"
 
 #ifndef __MAIN_H__
 #define __MAIN_H__
-
-#include <ArduinoJson.h>
 
 
 #define MAXSTRING 255

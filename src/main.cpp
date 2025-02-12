@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include <ArduinoJson.h>
+
 #include <main.h>
 #include <HardwareSerial.h>
 #ifndef TZICODE
@@ -53,7 +55,6 @@
 #endif
 #include "gxUserLed.h"
 #include <AceButton.h>
-//#include <ArduinoJson.h>
 #include "../lib/GxMqtt/GxMqtt.h"
 
 #include "XPowersLib.h"
@@ -5833,6 +5834,7 @@ void taskBackGround(void *pvParameters){
 
   #else
     wifiserver.begin(0);
+    status.wifiSTA.state = STARTED;
   #endif
 
   tBattEmpty = millis();
@@ -5851,7 +5853,7 @@ void taskBackGround(void *pvParameters){
     }
     handleUpdate(tAct);
     #else
-      if( ((millis()/100)*100) % 1000 == 0){
+      if( ((millis()/100)*100) % 5000 == 0){
         //Serial.println("Clean Clients.");
         wifiserver.wifiCleanClients();
       }

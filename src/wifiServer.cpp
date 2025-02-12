@@ -187,7 +187,7 @@ void WifiServer::wifiNotifyClients(void){
     const uint16_t size = JSON_OBJECT_SIZE(150);
     StaticJsonDocument<size> json;
 
-    json["dev_id"] = settings.myDevId;
+    json["dev_id"] = setting.myDevId;
     json["run_time"] = String(status.gps.Time);
 
     char datetime[20];
@@ -198,42 +198,42 @@ void WifiServer::wifiNotifyClients(void){
     }
 
     json["gps_time"] = datetime;
-    json["pilot_name"] = settings.PilotName;
-    json["wifi_psw"] = settings.wifi.password;
-    json["wifi_timer"] = settings.wifi.tWifiStop;
+    json["pilot_name"] = setting.PilotName;
+    json["wifi_psw"] = setting.wifi.password;
+    json["wifi_timer"] = setting.wifi.tWifiStop;
     json["b_mv"] = status.battery.voltage;
     json["b_perc"] = status.battery.percent;
     json["gps_fix"] = status.gps.Fix;
     json["gps_sat"] = status.gps.NumSat;
     json["temp_c"] = status.vario.temp;
-    json["spk_vol"] = settings.vario.volume;
-    json["beep_when_f"] = settings.vario.BeepOnlyWhenFlying;
+    json["spk_vol"] = setting.vario.volume;
+    json["beep_when_f"] = setting.vario.BeepOnlyWhenFlying;
     json["sd_size"] = "TODO";
     json["pres_hpa"] = status.vario.pressure;
     json["gps_alt"] = status.gps.alt;
     json["baro_alt"] = status.vario.alt;
-    json["ble_on"] = status.jsonSettings["ble_on"];
-    json["wifi_countdown"] = "TODO";
-    json["fly_min_v"] = "TODO";
-    json["fly_min_t"] = "TODO";
-    json["fly_stop_t"] = "TODO";
-    json["gps_hz"] = status.jsonSettings["gps_hz"];
-    json["epaper"] = status.jsonSettings["epaper"];
-    json["t_refresh"] = status.jsonSettings["t_refresh"];
-    json["auto_switch_page"] = status.jsonSettings["auto_switch_page"];
-    json["min_sat_av"] = status.jsonSettings["min_sat_av"];
-    json["rotation"] = status.jsonSettings["rotation"];
-    json["utc_offset"] = status.jsonSettings["utc_offset"];
-    json["sink_on"] = status.jsonSettings["sink_on"];
-    json["lift_on"] = status.jsonSettings["lift_on"];
-    json["kalman_e_mea"] = status.jsonSettings["kalman_e_mea"];
-    json["kalman_e_est"] = status.jsonSettings["kalman_e_est"];
-    json["kalman_q"] = status.jsonSettings["kalman_q"];
-    json["vario_avg_ms"] = status.jsonSettings["vario_avg_ms"];
-    json["vario_avg_ms_b"] = status.jsonSettings["vario_avg_ms_b"];
+    json["ble_on"] = true;//status.jsonSettings["ble_on"];
+    json["wifi_countdown"] = 1000;
+    json["fly_min_v"] = 6;
+    json["fly_min_t"] = 15;
+    json["fly_stop_t"] = 60;
+    json["gps_hz"] = setting.gps.Baud; //status.jsonSettings["gps_hz"];
+    json["epaper"] = "GxEPD213bn"; //status.jsonSettings["epaper"];
+    json["t_refresh"] = 300;//status.jsonSettings["t_refresh"];
+    json["auto_switch_page"] = false; //status.jsonSettings["auto_switch_page"];
+    json["min_sat_av"] = 5; //status.jsonSettings["min_sat_av"];
+    json["rotation"] = setting.displayRotation; // status.jsonSettings["rotation"];
+    json["utc_offset"] = 0; //status.jsonSettings["utc_offset"];
+    json["sink_on"] = setting.vario.sinkingThreshold;//status.jsonSettings["sink_on"];
+    json["lift_on"] = setting.vario.climbingThreshold;//status.jsonSettings["lift_on"];
+    json["kalman_e_mea"] = setting.vario.sigmaA;//status.jsonSettings["kalman_e_mea"];
+    json["kalman_e_est"] = setting.vario.sigmaA;//status.jsonSettings["kalman_e_est"];
+    json["kalman_q"] = setting.vario.sigmaP;//status.jsonSettings["kalman_q"];
+    json["vario_avg_ms"] = 250;//status.jsonSettings["vario_avg_ms"];
+    json["vario_avg_ms_b"] = 50; //status.jsonSettings["vario_avg_ms_b"];
 
-    json["thermal_detect"] = status.jsonSettings["thermal_detect"];
-    json["thermal_avg"] = status.jsonSettings["thermal_avg"];
+    json["thermal_detect"] = false; //status.jsonSettings["thermal_detect"];
+    json["thermal_avg"] = false; //status.jsonSettings["thermal_avg"];
 
 //    json["vario_curve"] = status.jsonSettings["vario_curve"];
 
@@ -269,7 +269,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
         Serial.println(value_input);
         int vol = atoi(value_input); 
         if (vol>=0 && vol<256){
-          settings.vario.volume = vol;
+          setting.vario.volume = vol;
           status.jsonSettings["volume"] = vol;
 //          status.test_speaker = true;
         }
@@ -325,7 +325,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       if (jsonData.containsKey("pilot_name")){
         strcpy(value_input,jsonData["pilot_name"]);
         status.jsonSettings["pilot_name"] = value_input;
-        settings.PilotName = String(value_input);
+        setting.PilotName = String(value_input);
         Serial.print("New Pilot Name: '");
         Serial.print(value_input);
         Serial.println("'");
@@ -529,10 +529,10 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
 
       delay(100);
 
-      // check if update input to save to SPIFFS settings
+      // check if update input to save to SPIFFS setting
       if (jsonData.containsKey("update")){
           if (jsonData["update"] == true) {
-              Serial.println("Updating json SPIFFS settings.");         
+              Serial.println("Updating json SPIFFS setting.");         
                 if (!SPIFFS.begin(true)) {
                   Serial.println("An Error has occurred while mounting SPIFFS");
                   return;
@@ -568,10 +568,10 @@ void onEvent(AsyncWebSocket       *server,
               
     switch (type) {
         case WS_EVT_CONNECT:
-            Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+            log_i("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
             break;
         case WS_EVT_DISCONNECT:
-            Serial.printf("WebSocket client #%u disconnected\n", client->id());
+            log_i("WebSocket client #%u disconnected\n", client->id());
             break;
         case WS_EVT_DATA:
             handleWebSocketMessage(arg, data, len);
@@ -611,8 +611,8 @@ void WifiServer::end(void){
   // force redraw of display
   //status.e_refresh = true;
 
-//  log_i("Wifi Server Off.");
-  Serial.println("Wifi Server Off.");
+  log_i("Wifi Server Off.");
+//  Serial.println("Wifi Server Off.");
 }
 
 static void handle_update_progress_cb(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
@@ -678,17 +678,24 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
     // close the file handle as the upload is now done
     request->_tempFile.close();
     Serial.println(logmessage);
-    Serial.println("Overriding /settings.json");
-    request->redirect("/settings");
+    Serial.println("Overriding /setting.json");
+    request->redirect("/setting");
   }
+}
+
+// Callback: send 404 if requested file does not exist
+void onPageNotFound(AsyncWebServerRequest *request) {
+  IPAddress remote_ip = request->client()->remoteIP();
+  log_e("[%s] HTTP GET request of %s",remote_ip.toString().c_str(),request->url().c_str());
+  request->send(404, "text/plain", "Not found");
 }
 
 bool WifiServer::begin(uint8_t type){
 
     const char* mypassword =  "12345678";
 
-    // log_i("switch WIFI ACCESS-POINT ON");
-    Serial.println("switch WIFI ACCESS-POINT ON");
+    log_i("switch WIFI ACCESS-POINT ON");
+//    Serial.println("switch WIFI ACCESS-POINT ON");
     WiFi.disconnect(true,true);
     WiFi.mode(WIFI_OFF);
     WiFi.persistent(false);
@@ -702,7 +709,7 @@ bool WifiServer::begin(uint8_t type){
     }
     strcpy(myssid,"TzI-Wifi-");
     char mychipid[10];
-    sprintf(mychipid, "%s", settings.myDevId); 
+    sprintf(mychipid, "%s", setting.myDevId); 
     strcat(myssid,mychipid);
     Serial.println(myssid);
 
@@ -762,12 +769,12 @@ bool WifiServer::begin(uint8_t type){
     SD_file_download(request);
   });
 
-  server.on("/export-settings", HTTP_GET, [](AsyncWebServerRequest *request){
+  server.on("/export-setting", HTTP_GET, [](AsyncWebServerRequest *request){
     export_settings(request);
   });
 
   // run handleUpload function when any file is uploaded
-  server.on("/import-settings", HTTP_POST, [](AsyncWebServerRequest *request) {
+  server.on("/import-setting", HTTP_POST, [](AsyncWebServerRequest *request) {
         request->send(200);
       }, handleUpload);
 
@@ -801,7 +808,8 @@ bool WifiServer::begin(uint8_t type){
       request->send(200);
     }, handle_update_progress_cb);
 
-
+  // Handle requests for pages that do not exist
+  server.onNotFound(onPageNotFound);
   
   server.serveStatic("/", SPIFFS, "/");
   server.begin();
