@@ -41,33 +41,15 @@
                     <select id="volume" class="w100">
                         <option hidden selected>Choose</option>
                         <option value=0>OFF</option>
-                        <option value=15>25&#37;</option>
-                        <option value=55>50&#37;</option>
-                        <option value=125>75&#37;</option>
-                        <option value=255>100&#37;</option>
+                        <option value=15>Low</option>
+                        <option value=55>Medium</option>
+                        <!-- <option value=125>75&#37;</option> -->
+                        <option value=255>High</option>
                     </select>
                 </td>
-            </tr>
-            <tr>
-                <td class="w50">Test Speaker</td><td class="w50"><button id="test_speaker" class="button w100">Beep!</button></td>
             </tr>
             <tr>
                 <td colspan="2"><a href="/vario_curve" target="_self"><button class="button w100">Vario Sound Curve</button></a></tr>
-            </tr>
-            <tr>
-                <td class="w50">Display Type
-                    <!-- <br>[<small id="spk_vol"></small>] -->
-                </td>
-                <td class="w50">
-                    <select id="epaper" class="w100">
-                        <option hidden selected>Choose</option>
-                        <option value=V154>Old 1.54 Panel BW GEDxxx</option>
-                        <option value=V154_V1>Old 1.54 Panel BW DP67</option>
-                        <option value=V154_V2>New 1.54 Panel BW DEPxxx</option>
-                        <option value=V213C>Old 2.13 Panel 3 colors</option>
-                        <option value=V290_V2>New 2.9 Panel BW</option>
-                    </select>
-                </td>
             </tr>
             <tr>
                 <td class="w50">Display Orientation
@@ -87,12 +69,6 @@
                 <td class="w50">Display refresh timer <br>(1-30 minutes)</td>
                 <td class="w50">
                     <input type="number" id="t_refresh" value="3" min="1" max="30" oninput="validity.valid||(value='3');">
-                </td>
-            </tr>
-            <tr>
-                <td class="w50">Auto display Data/Aircrafts if flying/neighbours</td>
-                <td class="w50">
-                    <input type="checkbox" id="auto_switch_page">
                 </td>
             </tr>
             <tr>
@@ -129,9 +105,8 @@
             <tr>
                 <td class="w50">Reinitialize GPS module</td><td class="w50"><button id="restart_gps" class="button w100">Reset</button></td>
             </tr>
-            <tr>
+            <!-- <tr>
                 <td class="w50">Change Gps Hz
-                    <!-- <br>[<small id="gps_hz"></small>Hz] -->
                 </td>
                 <td class="w50">
                     <select id="gps_frq" class="w100">
@@ -142,7 +117,7 @@
                         <option value=16>16 Hz</option>
                     </select>
                 </td>
-            </tr>                           
+            </tr>                            -->
             <tr>
                 <td class="w50">WiFi Off after
                     <br>[<small id="wifi_countdown_min"></small>:<small id="wifi_countdown_sec"></small></ll>]
@@ -156,17 +131,6 @@
                         <option value=30>30 min.</option>
                         <option value=0>ALWAYS ON</option>
                     </select>
-                </td>
-            </tr>
-            <tr>
-                <td class="w50">Change WiFi Password<br>8..12 char, no spaces!</td>
-                <td class="w50">
-                    <input id="wifi_psw" type="text" minlength="8" maxlength="12" onkeypress="return event.charCode != 32" placeholder="12345678">
-                    <button id="save_wifi_psw" class="button" disabled>Save</button>
-                    <br>
-                    <small>If you change this and you forget the psw 
-                    <br>you will need to reset to factory the TzI 
-                    <br>to access again to wifi interface! Keep it in mind :)</small>
                 </td>
             </tr>
         </tbody>

@@ -103,8 +103,8 @@ void SD_file_download(AsyncWebServerRequest *request){
 }
 
 void export_settings(AsyncWebServerRequest *request){
-  // TODO 
-  // request->send(SPIFFS, SETTINGS_FileName, String(), true);
+//  TODO 
+  request->send(SPIFFS, SETTINGS_FileName, String(), true);
 }
 
 String processor(const String& var)
@@ -295,41 +295,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
           }
       }
 
-      // check wifi off input TODO
-      // if (jsonData.containsKey("wifi_timer")){
-      //   strcpy(value_input,jsonData["wifi_timer"]);
-      //   int wifiTimer = atoi(value_input);
-      //     if (wifiTimer >= 0) {
-      //         status.wifi_countdown = wifiTimer != 0 ? wifiTimer * 60 : 999;
-      //         status.t_start = millis();
-      //         status.wifiOffTime = wifiTimer;
-      //         status.jsonSettings["wifi_timer"] = wifiTimer;
-      //         Serial.print("Setting WifiOff timer: ");
-      //         Serial.print(wifiTimer);
-      //         Serial.println(" min.");
-      //     }else{
-      //       Serial.println("Something went wrong!");
-      //     }
-      // }
-
-      // check wifi psw input
-      if (jsonData.containsKey("wifi_psw")){
-        strcpy(value_input,jsonData["wifi_psw"]);
-        status.jsonSettings["wifi_psw"] = value_input;
-        Serial.print("New WiFi Password: '");
-        Serial.print(value_input);
-        Serial.println("'");
-      }
-
-      // check Pilot Name input
-      if (jsonData.containsKey("pilot_name")){
-        strcpy(value_input,jsonData["pilot_name"]);
-        status.jsonSettings["pilot_name"] = value_input;
-        setting.PilotName = String(value_input);
-        Serial.print("New Pilot Name: '");
-        Serial.print(value_input);
-        Serial.println("'");
-      }
+      if (jsonData.containsKey("wifi_timer")) setting.wifi.tWifiStop = jsonData["wifioff"].as<uint32_t>();
+      if (jsonData.containsKey("pilot_name")) setting.PilotName = jsonData["pilot_name"].as<String>();
+        
 
       // check Fly Min Speed
       if (jsonData.containsKey("fly_min_v")){
