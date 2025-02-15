@@ -9,6 +9,8 @@
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
+uint32_t client_id = 1;
+
 Logger logger;
 
 WifiServer::WifiServer(){
@@ -172,7 +174,7 @@ String processor(const String& var)
     stringReturn += "</tbody></table>";
     return stringReturn;
   }else if (var == "VARIO_CURVE"){
-    return  status.jsonSettings["vario_curve"];
+    return  "";//status.jsonSettings["vario_curve"];
   }
  
   return "";
@@ -187,6 +189,7 @@ void WifiServer::wifiNotifyClients(void){
     const uint16_t size = JSON_OBJECT_SIZE(150);
     StaticJsonDocument<size> json;
 
+    json.clear();
     json["dev_id"] = setting.myDevId;
     json["run_time"] = String(status.gps.Time);
 
@@ -197,30 +200,30 @@ void WifiServer::wifiNotifyClients(void){
       strcpy(datetime,"GPS Locating...");
     }
 
-    json["gps_time"] = datetime;
-    json["pilot_name"] = setting.PilotName;
+    json["gps_time"] = datetime ? datetime : "";
+    json["pilot_name"] = setting.PilotName ? setting.PilotName : "";
     json["wifi_psw"] = setting.wifi.password;
     json["wifi_timer"] = setting.wifi.tWifiStop;
     json["b_mv"] = status.battery.voltage;
     json["b_perc"] = status.battery.percent;
     json["gps_fix"] = status.gps.Fix;
-    json["gps_sat"] = status.gps.NumSat;
-    json["temp_c"] = status.vario.temp;
+    json["gps_sat"] = status.gps.NumSat ? status.gps.NumSat : 0;
+    json["temp_c"] = status.vario.temp ? status.vario.temp : 0;
     json["spk_vol"] = setting.vario.volume;
     json["beep_when_f"] = setting.vario.BeepOnlyWhenFlying;
-    json["sd_size"] = "TODO";
-    json["pres_hpa"] = status.vario.pressure;
-    json["gps_alt"] = status.gps.alt;
-    json["baro_alt"] = status.vario.alt;
-    json["ble_on"] = true;//status.jsonSettings["ble_on"];
-    json["wifi_countdown"] = 1000;
+    json["sd_size"] = setting.sd_size;
+    json["pres_hpa"] = status.vario.pressure ? status.vario.pressure : 0;
+    json["gps_alt"] = status.gps.alt ? status.gps.alt : 0;
+    json["baro_alt"] = status.vario.alt ? status.vario.alt : 0;
+    json["ble_on"] = 1;//status.jsonSettings["ble_on"];
+    json["wifi_countdown"] = 60;
     json["fly_min_v"] = 6;
     json["fly_min_t"] = 15;
     json["fly_stop_t"] = 60;
     json["gps_hz"] = setting.gps.Baud; //status.jsonSettings["gps_hz"];
     json["epaper"] = "GxEPD213bn"; //status.jsonSettings["epaper"];
     json["t_refresh"] = 300;//status.jsonSettings["t_refresh"];
-    json["auto_switch_page"] = false; //status.jsonSettings["auto_switch_page"];
+    json["auto_switch_page"] = 0; //status.jsonSettings["auto_switch_page"];
     json["min_sat_av"] = 5; //status.jsonSettings["min_sat_av"];
     json["rotation"] = setting.displayRotation; // status.jsonSettings["rotation"];
     json["utc_offset"] = 0; //status.jsonSettings["utc_offset"];
@@ -232,14 +235,24 @@ void WifiServer::wifiNotifyClients(void){
     json["vario_avg_ms"] = 250;//status.jsonSettings["vario_avg_ms"];
     json["vario_avg_ms_b"] = 50; //status.jsonSettings["vario_avg_ms_b"];
 
-    json["thermal_detect"] = false; //status.jsonSettings["thermal_detect"];
-    json["thermal_avg"] = false; //status.jsonSettings["thermal_avg"];
+    json["thermal_detect"] = 0; //status.jsonSettings["thermal_detect"];
+    json["thermal_avg"] = 2000; //status.jsonSettings["thermal_avg"];
+
+    json["fanet_rx"] = status.fanetRx;
+    json["fanet_tx"] = status.fanetTx;
+    json["leg_rx"] = status.legRx;
+    json["leg_tx"] = status.legTx;
 
 //    json["vario_curve"] = status.jsonSettings["vario_curve"];
 
     char data[2048];
     size_t len = serializeJson(json, data);
-    ws.textAll(data, len);
+
+    if (ws.hasClient(client_id) && ws.availableForWrite(client_id)) {
+      ws.text(client_id, data);
+    }
+  //  ws.textAll(data, len);
+
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
@@ -255,137 +268,35 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       }
       char value_input[128]; 
 
-      // check UTC offset
-      if (jsonData.containsKey("utc_offset")){
-        int vint_inp = jsonData["utc_offset"];
-        status.jsonSettings["utc_offset"] = vint_inp;
-        Serial.print("New UTC offset: ");
-        Serial.print(vint_inp);
-      }
+      if (jsonData.containsKey("update")){
+        if (jsonData["update"] == true) {
 
-      // check volume input
-      if (jsonData.containsKey("volume")){
-        strcpy(value_input,jsonData["volume"]);
-        Serial.println(value_input);
-        int vol = atoi(value_input); 
-        if (vol>=0 && vol<256){
-          setting.vario.volume = vol;
-          status.jsonSettings["volume"] = vol;
-//          status.test_speaker = true;
+          if (jsonData.containsKey("pilot_name")) setting.PilotName = jsonData["pilot_name"].as<String>();
+          if (jsonData.containsKey("utc_offset")) setting.utc_offset = jsonData["utc_offset"].as<int8_t>();
+          if (jsonData.containsKey("volume")) setting.vario.volume = jsonData["volume"].as<uint8_t>();
+          if (jsonData.containsKey("rotation")) setting.displayRotation = jsonData["rotation"].as<uint8_t>();
+          //if (jsonData.containsKey("t_refresh")) ...
+          if (jsonData.containsKey("beep_when_f")) setting.vario.BeepOnlyWhenFlying = jsonData["beep_when_f"].as<bool>();
+          if (jsonData.containsKey("wifi_timer")) setting.wifi.tWifiStop = jsonData["wifi_timer"].as<uint32_t>();        
+          //if (jsonData.containsKey("fly_min_v")) ...
+          //if (jsonData.containsKey("fly_min_t")) ...
+          //if (jsonData.containsKey("fly_stop_t")) ...
+          //if (jsonData.containsKey("min_sat_av")) ...
+          //if (jsonData.containsKey("ble_on")) ...
+
         }
       }
 
-      // check display input
-      if (jsonData.containsKey("t_refresh")){
-        strcpy(value_input,jsonData["t_refresh"]);
-        Serial.println(value_input);
-        int timer = atoi(value_input); 
-        if (timer>=1 && timer<=30){
-          status.jsonSettings["t_refresh"] = timer;
-        }
-      }
-      // check test speaker input
-      if (jsonData.containsKey("speaker")){
-        strcpy(value_input,jsonData["speaker"]);
-          if (strcmp(value_input, "test") == 0) {
-//              status.test_speaker = true;
-              Serial.println("Testing speaker, you should hear a beep!?");              
-          }else{
-            Serial.println("Something went wrong!");
-          }
-      }
-
-      if (jsonData.containsKey("wifi_timer")) setting.wifi.tWifiStop = jsonData["wifioff"].as<uint32_t>();
-      if (jsonData.containsKey("pilot_name")) setting.PilotName = jsonData["pilot_name"].as<String>();
-        
-
-      // check Fly Min Speed
-      if (jsonData.containsKey("fly_min_v")){
-        int vint_inp = jsonData["fly_min_v"];
-        status.jsonSettings["fly_min_v"] = vint_inp;
-//        status.fly_min_v = vint_inp;
-        Serial.print("New Fly Min speed: '");
-        Serial.print(vint_inp);
-        Serial.println("'");
-      }
-
-      // check Fly Min Time
-      if (jsonData.containsKey("fly_min_t")){
-        int vint_inp = jsonData["fly_min_t"];
-        status.jsonSettings["fly_min_t"] = vint_inp;
-//        status.fly_min_t = vint_inp;
-        Serial.print("New Fly Min Time: '");
-        Serial.print(vint_inp);
-        Serial.println("'");
-      }
-
-      // check Fly Stop Time
-      if (jsonData.containsKey("fly_stop_t")){
-        int vint_inp = jsonData["fly_stop_t"];
-        status.jsonSettings["fly_stop_t"] = vint_inp;
-//        status.fly_stop_t = vint_inp;
-        Serial.print("New Fly Stop Time: '");
-        Serial.print(vint_inp);
-        Serial.println("'");
-      }
-
-      // check Min Sat Available
-      if (jsonData.containsKey("min_sat_av")){
-        int vint_inp = jsonData["min_sat_av"];
-        status.jsonSettings["min_sat_av"] = vint_inp;
-//        status.min_sat_av = vint_inp;
-        Serial.print("New Min Sat available: '");
-        Serial.print(vint_inp);
-        Serial.println("'");
-      }
-
-      // check Beep When Flying input
-      if (jsonData.containsKey("beep_when_f")){
-        bool bwf = jsonData["beep_when_f"];
-        status.jsonSettings["beep_when_f"] = bwf;
-//        status.beep_when_f = bwf;
-        Serial.print("Beep When Flying: '");
-        Serial.print(bwf);
-        Serial.println("'");
-      }
-
-      // check display type
-      if (jsonData.containsKey("epaper")){
-        char vtype_inp[12];
-        strcpy(vtype_inp, jsonData["epaper"]);
-        status.jsonSettings["epaper"] = vtype_inp;
-        Serial.print("New disaply type: ");
-        Serial.print(vtype_inp);
-      }
-
-      // check display rotation
-      if (jsonData.containsKey("rotation")){
-        int vint_inp = jsonData["rotation"];
-        status.jsonSettings["rotation"] = vint_inp;
-//        status.rotation = vint_inp;
-        Serial.print("New disaply rotation: ");
-        Serial.print(vint_inp);
-//        status.e_refresh = true;
-      }
-
-      // check Auto switch page When Flying input
-      if (jsonData.containsKey("auto_switch_page")){
-        bool asp = jsonData["auto_switch_page"];
-        status.jsonSettings["auto_switch_page"] = asp;
-//        status.auto_switch_page = asp;
-        Serial.print("Auto switch page when flying: '");
-        Serial.print(asp);
-        Serial.println("'");
-      }
-
-      // check BLE
-      if (jsonData.containsKey("ble_on")){
-        bool bwf = jsonData["ble_on"];
-        status.jsonSettings["ble_on"] = bwf;
-        Serial.print("BLE on: '");
-        Serial.print(bwf);
-        Serial.println("'");
-      }
+      // // check test speaker input
+      // if (jsonData.containsKey("speaker")){
+      //   strcpy(value_input,jsonData["speaker"]);
+      //     if (strcmp(value_input, "test") == 0) {
+      //         status.test_speaker = true;
+      //         Serial.println("Testing speaker, you should hear a beep!?");              
+      //     }else{
+      //       Serial.println("Something went wrong!");
+      //     }
+      // }
 
       // check for restart
       if (jsonData.containsKey("restart")){
@@ -398,6 +309,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       if (jsonData.containsKey("restart_gps")){
         if(jsonData["restart_gps"] == true){
 //          status.restart_GPS = true;
+            command.ConfigGPS = true;
         }
       }
 
@@ -462,63 +374,68 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       //   status.jsonSettings["vario_avg_ms_b"] = jsonData["vario_avg_ms_b"];
       // }
 
-      // check vario curve input
-      if (jsonData.containsKey("vario_curve")){
-        status.jsonSettings.remove("vario_curve");
-        JsonArray vario_curve = status.jsonSettings.createNestedArray("vario_curve");
+      // // check vario curve input
+      // if (jsonData.containsKey("vario_curve")){
+      //   status.jsonSettings.remove("vario_curve");
+      //   JsonArray vario_curve = status.jsonSettings.createNestedArray("vario_curve");
 
-        for (int i=0;i<sizeof(jsonData["vario_curve"]);i++){
-            float vval = jsonData["vario_curve"][i]["vval"];
-            uint32_t frq = jsonData["vario_curve"][i]["frq"];
-            uint32_t ton = jsonData["vario_curve"][i]["ton"];
-            uint32_t toff = jsonData["vario_curve"][i]["toff"];
+      //   for (int i=0;i<sizeof(jsonData["vario_curve"]);i++){
+      //       float vval = jsonData["vario_curve"][i]["vval"];
+      //       uint32_t frq = jsonData["vario_curve"][i]["frq"];
+      //       uint32_t ton = jsonData["vario_curve"][i]["ton"];
+      //       uint32_t toff = jsonData["vario_curve"][i]["toff"];
 
-            JsonObject vario_curve_x = vario_curve.createNestedObject();
-            vario_curve_x["vval"] = vval;
-            vario_curve_x["frq"] = frq;
-            vario_curve_x["ton"] = ton;
-            vario_curve_x["toff"] = toff;
-        }
-      }
+      //       JsonObject vario_curve_x = vario_curve.createNestedObject();
+      //       vario_curve_x["vval"] = vval;
+      //       vario_curve_x["frq"] = frq;
+      //       vario_curve_x["ton"] = ton;
+      //       vario_curve_x["toff"] = toff;
+      //   }
+      // }
 
-      // check Thermal detect input
-      if (jsonData.containsKey("thermal_detect")){
-        bool tdb = jsonData["thermal_detect"];
-        status.jsonSettings["thermal_detect"] = tdb;
-//        status.thermal_detect = tdb;
-        Serial.print("Thermal detect: '");
-        Serial.print(tdb);
-        Serial.println("'");
-      }
-      if(jsonData.containsKey("thermal_avg")){
-//        status.thermal_avg = jsonData["thermal_avg"];
-        status.jsonSettings["thermal_avg"] = jsonData["thermal_avg"];
-      }
+//       // check Thermal detect input
+//       if (jsonData.containsKey("thermal_detect")){
+//         bool tdb = jsonData["thermal_detect"];
+//         status.jsonSettings["thermal_detect"] = tdb;
+// //        status.thermal_detect = tdb;
+//         Serial.print("Thermal detect: '");
+//         Serial.print(tdb);
+//         Serial.println("'");
+//       }
+//       if(jsonData.containsKey("thermal_avg")){
+// //        status.thermal_avg = jsonData["thermal_avg"];
+//         status.jsonSettings["thermal_avg"] = jsonData["thermal_avg"];
+//       }
 
-      delay(100);
+//      delay(100);
 
       // check if update input to save to SPIFFS setting
       if (jsonData.containsKey("update")){
           if (jsonData["update"] == true) {
-              Serial.println("Updating json SPIFFS setting.");         
-                if (!SPIFFS.begin(true)) {
-                  Serial.println("An Error has occurred while mounting SPIFFS");
-                  return;
-                }     
-                // Open file for writing
-                File file = SPIFFS.open(SETTINGS_FileName, FILE_WRITE);
-                if (!file) {
-                  Serial.println(F("Failed to create file"));
-                  return;
-                }
-                // Serialize JSON to file
-                if (serializeJson(status.jsonSettings, file) == 0) {
-                  Serial.println(F("Failed to write to file"));
-                }              
-                // Close the file
-                file.close();
-                Serial.print("Settings saved to ");
-                Serial.println(SETTINGS_FileName);                
+              // Serial.println("Updating json SPIFFS setting.");         
+              //   if (!SPIFFS.begin(true)) {
+              //     Serial.println("An Error has occurred while mounting SPIFFS");
+              //     return;
+              //   }     
+              //   // Open file for writing
+              //   File file = SPIFFS.open(SETTINGS_FileName, FILE_WRITE);
+              //   if (!file) {
+              //     Serial.println(F("Failed to create file"));
+              //     return;
+              //   }
+              //   // Serialize JSON to file
+              //   if (serializeJson(status.jsonSettings, file) == 0) {
+              //     Serial.println(F("Failed to write to file"));
+              //   }              
+              //   // Close the file
+              //   file.close();
+              //   Serial.print("Settings saved to ");
+              //   Serial.println(SETTINGS_FileName); 
+
+              // Overwrite preferences with modified setting
+              log_i("write config-to file");
+              write_configFile(&setting);
+
           }else{
             Serial.println("Something went wrong!");
           }
@@ -537,16 +454,20 @@ void onEvent(AsyncWebSocket       *server,
     switch (type) {
         case WS_EVT_CONNECT:
             log_i("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+            client_id = client->id();
+            status.wifiSTA.state = CONNECTED;
             break;
         case WS_EVT_DISCONNECT:
             log_i("WebSocket client #%u disconnected\n", client->id());
+            client_id = 0;
+            status.wifiSTA.state = DISCONNECTED;
             break;
         case WS_EVT_DATA:
             handleWebSocketMessage(arg, data, len);
             break;
         case WS_EVT_PONG:
         case WS_EVT_ERROR:
-            log_i("WS_EVT_ERROR: %s",data);
+            log_i("WS_EVT_ERROR: %s", data);
             break;
     }
 }
@@ -677,17 +598,18 @@ bool WifiServer::begin(uint8_t type){
     }
     strcpy(myssid,"TzI-Wifi-");
     char mychipid[10];
-    sprintf(mychipid, "%s", setting.myDevId); 
+    sprintf(mychipid, "%s", setting.myDevId.c_str()); 
     strcat(myssid,mychipid);
-    Serial.println(myssid);
+    delay(1);
+    log_i("Wifi ssid: %s", myssid);
 
     WiFi.setHostname(myssid);
 
-    if (status.jsonSettings.containsKey("wifi_psw")){
-      WiFi.softAP(myssid, status.jsonSettings["wifi_psw"]);
-    }else{
+    // if (status.jsonSettings.containsKey("wifi_psw")){
+    //   WiFi.softAP(myssid, status.jsonSettings["wifi_psw"]);
+    // }else{
       WiFi.softAP(myssid, mypassword);
-    }
+    // }
 
     initWebSocket();
   

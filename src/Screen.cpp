@@ -94,6 +94,7 @@ bool Screen::begin(uint8_t type,int8_t cs,int8_t dc,int8_t rst,int8_t busy,int8_
     }else {
         log_i("SD init success");
         log_i("SD Card insert:%.2f GB",SD.cardSize() / 1024.0 / 1024.0 / 1024.0);
+        setting.sd_size = SD.cardSize();
     }
 
   // Select the custom SPI bus and settings for the e-ink display
@@ -619,7 +620,7 @@ void Screen::drawMainScreen(void){
   //actData.SatCount = 9;
   actData.flightTime = status.flightTime;
   actData.flying = status.flying;
-  actData.wifi = (status.wifiSTA.state) ? true : false;
+  actData.wifi = status.wifiSTA.state != IDLE ? true : false;
   actData.bluetooth = status.bluetoothStat;
   if (status.bMuting){
       actData.volume = 0;
@@ -731,7 +732,11 @@ void Screen::drawMainScreen(void){
           pEInk->fillScreen(GxEPD_WHITE);
           drawspeaker(49-DX_ICONS,0,16,16,data.volume);
           drawflying(67-DX_ICONS,0,16,16,data.flying);
-          if (data.wifi) pEInk->drawXBitmap(85-DX_ICONS, 4,WIFI_bits,  14, 8, GxEPD_BLACK);
+          if (data.wifi){
+             pEInk->drawXBitmap(85-DX_ICONS, 4,WIFI_bits,  14, 8, GxEPD_BLACK);
+          }else{
+            pEInk->fillRect(85-DX_ICONS, 4, 14, 8, GxEPD_WHITE);
+          }
           if (data.bluetooth == 1){
               pEInk->drawXBitmap(101-DX_ICONS, 3,BT_bits,  8, 10, GxEPD_BLACK);
           }else if (data.bluetooth == 2){
@@ -877,7 +882,11 @@ void Screen::drawMainScreen(void){
 
           drawspeaker(197,17,16,16,data.volume);
           drawflying(220,17,16,16,data.flying);
-          if (data.wifi) pEInk->drawXBitmap(255, 4,WIFI_bits,  14, 8, GxEPD_BLACK);
+          if (data.wifi) {
+            pEInk->drawXBitmap(255, 4,WIFI_bits,  14, 8, GxEPD_BLACK);
+          }else{
+            pEInk->fillRect(255, 4, 14, 8, GxEPD_WHITE);
+          }
           if (data.bluetooth == 1){
               pEInk->drawXBitmap(255, 17,BT_bits,  8, 10, GxEPD_BLACK);
           }else if (data.bluetooth == 2){
@@ -987,7 +996,7 @@ void Screen::webUpdate(void){
       pEInk->setRotation(3);
     }  
     pEInk->setFullWindow();
-    pEInk->setFont(&FreeMonoBold24pt7b);
+    pEInk->setFont(&gnuvarioe18pt7b);
     pEInk->setTextColor(GxEPD_BLACK);
     pEInk->firstPage();
     do

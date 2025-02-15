@@ -416,6 +416,7 @@ struct SettingsData{
   uint8_t awLiveTracking; //airwhere live-tracking
   WifiSettings wifi;
   String PilotName; //Pilotname
+  int8_t utc_offset;
   uint8_t AircraftType; //Aircrafttype
   String UDPServerIP; //UDP-IP-Adress for sending Pakets
   uint16_t UDPSendPort; //Port of udp-server
@@ -439,6 +440,7 @@ struct SettingsData{
   Fanetweatherupload FntWuUpload[MAXFNTUPLOADSTATIONS]; //Fanet WU Upload
   Fanetweatherupload FntWiUpload[MAXFNTUPLOADSTATIONS]; //Fanet Wi Upload
   bool bAutoupdate; //auto-update to new Version
+  uint16_t sd_size;
 };
 
 struct wdErrorBits
@@ -529,9 +531,6 @@ struct statusRtc{
 };
 
 struct statusData{
-  #ifdef TZICODE
-  StaticJsonDocument<2048> jsonSettings;
-#endif
   uint8_t displayType;
   statusNetwork wifiAP;
   statusWifi wifiSTA;

@@ -117,14 +117,14 @@
         wifi_countdown_sec.innerHTML = Math.round(data.wifi_countdown - Math.floor(data.wifi_countdown/60)*60);    
     }
 
-    if (data.wifi_countdown < 10){
-        alert("Shut Down Wifi and Restarting in 10 sec.");
-    }
+    // if (data.wifi_countdown < 10){
+    //     alert("Shut Down Wifi and Restarting in 10 sec.");
+    // }
 
     if (only_once){
         document.getElementById('beep_when_f').checked = data.beep_when_f;
-        document.getElementById('auto_switch_page').checked = data.auto_switch_page;
-        document.getElementById('t_refresh').value = data.t_refresh;
+//        document.getElementById('auto_switch_page').checked = data.auto_switch_page;
+//        document.getElementById('t_refresh').value = data.t_refresh;
         document.getElementById('fly_min_v').value = data.fly_min_v;
         document.getElementById('fly_min_t').value = data.fly_min_t;
         document.getElementById('fly_stop_t').value = data.fly_stop_t;
@@ -141,22 +141,22 @@
 
 function initButtons() {
     document.getElementById('volume').addEventListener('change', onVolumeSpeaker);
-    document.getElementById('test_speaker').addEventListener('click', onTestSpeaker);
+    //document.getElementById('test_speaker').addEventListener('click', onTestSpeaker);
     document.getElementById('wifi_timer').addEventListener('change', onWifiOff);
     document.getElementById('restart').addEventListener('click', onRestartTzI);
-    document.getElementById('wifi_psw').addEventListener('keyup', checkInput);
-    document.getElementById('save_wifi_psw').addEventListener('click', onSaveWifiPsw);
+    //document.getElementById('wifi_psw').addEventListener('keyup', checkInput);
+    //document.getElementById('save_wifi_psw').addEventListener('click', onSaveWifiPsw);
     document.getElementById('save_pilot_name').addEventListener('click', onSavePilot);
     document.getElementById('beep_when_f').addEventListener('change',onBeepWhenF);
-    document.getElementById('auto_switch_page').addEventListener('change',onAutoSwitchPage);
-    document.getElementById('t_refresh').addEventListener('change', onDisplayTimer);
-    document.getElementById('epaper').addEventListener('change', onEpaper);
+    //document.getElementById('auto_switch_page').addEventListener('change',onAutoSwitchPage);
+    //document.getElementById('t_refresh').addEventListener('change', onDisplayTimer);
+    //document.getElementById('epaper').addEventListener('change', onEpaper);
     document.getElementById('rotation').addEventListener('change', onRotation);
     document.getElementById('fly_min_v').addEventListener('change', onFlyMinV);
     document.getElementById('fly_min_t').addEventListener('change', onFlyMinT);
     document.getElementById('fly_stop_t').addEventListener('change', onFlyStopT);
     document.getElementById('restart_gps').addEventListener('click', onGPSrestart);
-    document.getElementById('gps_frq').addEventListener('change',onGpsChangeFrq);
+    //document.getElementById('gps_frq').addEventListener('change',onGpsChangeFrq);
     document.getElementById('min_sat_av').addEventListener('change',onMinSatAv);
     document.getElementById('utc_offset').addEventListener('change',onUTCoffset);
 

@@ -1731,6 +1731,9 @@ void setup() {
 
   Serial.begin(115200);
   delay(3000);
+
+  setting.sd_size = 0;
+
   status.restart.doRestart = false;
   status.bPowerOff = false;
   status.bWUBroadCast = false;
@@ -5810,6 +5813,7 @@ void taskBackGround(void *pvParameters){
   static uint32_t tGetTime = millis();
   uint32_t tBattEmpty = millis();
   uint32_t tRuntime = millis();
+  uint32_t tNotifyClient = millis();
   uint32_t tGetWifiRssi = millis();    
   bool bPowersaveOk = false;
   #ifdef GSMODULE
@@ -5833,6 +5837,7 @@ void taskBackGround(void *pvParameters){
   #endif
 
   #else
+    log_i("Starting WIFI server");
     wifiserver.begin(0);
     status.wifiSTA.state = STARTED;
   #endif
@@ -5853,12 +5858,23 @@ void taskBackGround(void *pvParameters){
     }
     handleUpdate(tAct);
     #else
-      if( ((millis()/100)*100) % 5000 == 0){
-        //Serial.println("Clean Clients.");
-        wifiserver.wifiCleanClients();
+      // if( ((millis()/100)*100) % 5000 == 0){
+      //   //Serial.println("Clean Clients.");
+      //   wifiserver.wifiCleanClients();
+      // }
+      if (setting.wifi.tWifiStop>0 && timeOver(tAct, tWifiCheck, setting.wifi.tWifiStop*1000) ){
+        if (status.wifiSTA.state != DISCONNECTED){
+          status.wifiSTA.state = IDLE;
+          wifiserver.end();  
+        }
       }
-      if( ((millis()/100)*100) % 1000 == 0){
-        wifiserver.wifiNotifyClients();
+      
+      if ( status.wifiSTA.state == CONNECTED || status.wifiSTA.state == FULL_CONNECTED ){
+        if (timeOver(tAct,tNotifyClient,1000)){
+          log_i("Notify Client");
+          wifiserver.wifiNotifyClients();
+          tNotifyClient = millis();
+        }  
       }
     #endif
     /*

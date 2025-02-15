@@ -11,7 +11,7 @@ extern struct statusData status;
 
 extern struct statusData status;
 extern struct SettingsData setting;
-
+extern struct commandData command;
 
 #ifndef __WIFISERVER_H__
 #define __WIFISERVER_H__
@@ -21,6 +21,7 @@ extern struct SettingsData setting;
 #include "SPIFFS.h"
 #include "ESPAsyncWebServer.h"
 #include <ArduinoJson.h>
+#include "fileOps.h"
 #include <TimeLib.h>
 #include <Update.h>
 #include <Logger.h>

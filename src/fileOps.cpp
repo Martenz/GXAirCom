@@ -18,6 +18,7 @@ void load_configFile(SettingsData* pSetting){
   pSetting->outputGPS = preferences.getUChar("OGPS",1); //
   pSetting->outputFANET = preferences.getUChar("OFANET",1); //
   pSetting->PilotName = preferences.getString("PILOTNAME","");
+  pSetting->utc_offset = preferences.getChar("utc_offset",0);
   pSetting->myDevId = preferences.getString("myDevId",""); 
   pSetting->myDevIdType = preferences.getULong("myDevIdType",2); // Default FLARM
   pSetting->gps.customGPSConfig = preferences.getBool("customGPSConfig",false);
