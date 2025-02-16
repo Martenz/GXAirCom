@@ -10,7 +10,7 @@ void load_configFile(SettingsData* pSetting){
   pSetting->boardType = eBoard(preferences.getUChar("BOARDTYPE",eBoard::UNKNOWN)); //
   pSetting->CPUFrequency = preferences.getUChar("CPUFREQU",240); //
   pSetting->bHasExtPowerSw = preferences.getUChar("EXTPWSW",0); //external power-switch
-  pSetting->RFMode = preferences.getUChar("RFM",11); //default FntRx + FntTx + LegTx
+  pSetting->RFMode = preferences.getUChar("RFM",15); //default FntRx + FntTx + LegRx + LegTx
   pSetting->awLiveTracking = preferences.getUChar("AWLIVE",0); //
   pSetting->bOutputSerial = preferences.getUChar("OSerial",0); //
   pSetting->outputModeVario = eOutputVario(preferences.getUChar("OVario",eOutputVario::OVARIO_LK8EX1)); //

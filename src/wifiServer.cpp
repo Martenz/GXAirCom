@@ -243,6 +243,8 @@ void WifiServer::wifiNotifyClients(void){
     json["leg_rx"] = status.legRx;
     json["leg_tx"] = status.legTx;
 
+    json["rfmode"] = setting.RFMode;
+
 //    json["vario_curve"] = status.jsonSettings["vario_curve"];
 
     char data[2048];
@@ -283,7 +285,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
           //if (jsonData.containsKey("fly_stop_t")) ...
           //if (jsonData.containsKey("min_sat_av")) ...
           //if (jsonData.containsKey("ble_on")) ...
-
+          if (jsonData.containsKey("rfmode")) setting.RFMode = jsonData["rfmode"].as<uint8_t>();
         }
       }
 

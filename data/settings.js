@@ -121,6 +121,17 @@
     //     alert("Shut Down Wifi and Restarting in 10 sec.");
     // }
 
+    var rfmode = document.querySelectorAll('#rfmode option');
+    rfmode.forEach(function(element, index) {
+    // current DOM element
+        if(element.value == data.rfmode){
+            element.selected = true;
+        }else{
+            element.selected = false;
+        }
+    });   
+    
+
     if (only_once){
         document.getElementById('beep_when_f').checked = data.beep_when_f;
 //        document.getElementById('auto_switch_page').checked = data.auto_switch_page;
@@ -159,6 +170,7 @@ function initButtons() {
     //document.getElementById('gps_frq').addEventListener('change',onGpsChangeFrq);
     document.getElementById('min_sat_av').addEventListener('change',onMinSatAv);
     document.getElementById('utc_offset').addEventListener('change',onUTCoffset);
+    document.getElementById('rfmode').addEventListener('change', onRfmode);
 
 }
 
@@ -319,4 +331,11 @@ function onWifiOff(event) {
     var value = select.options[select.selectedIndex].value.toString();
     showLoader();
     websocket.send(JSON.stringify({'wifi_timer':value,'update':true}));
+}
+
+function onRfmode(event) {
+    var select = document.getElementById('rfmode');
+    var value = select.options[select.selectedIndex].value.toString();
+    showLoader();
+    websocket.send(JSON.stringify({'rfmode':value,'update':true}));
 }
