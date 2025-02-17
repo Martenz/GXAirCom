@@ -38,7 +38,8 @@ uint32_t Buzzer::interpolate(StaticJsonDocument<1024> curves, float vval, const 
 
 void Buzzer::sing(uint8_t spk_pin, int song) {
   // iterate over the notes of the melody:
-    ledcAttachPin(spk_pin, LEDC_CHANNEL_0);
+//    ledcSetup(LEDC_CHANNEL_0, 1000, 8);
+//    ledcAttachPin(spk_pin, LEDC_CHANNEL_0);
 
     int size = sizeof(melody[song]) / sizeof(int);
     for (int thisNote = 0; thisNote < size; thisNote++) {
@@ -57,21 +58,23 @@ void Buzzer::sing(uint8_t spk_pin, int song) {
 //        delay(noteDuration);
     }
 
-    ledcDetachPin(spk_pin);
+//    ledcDetachPin(spk_pin);
 }
 
 bool Buzzer::begin(uint8_t spk_pin){
 
   ledcSetup(LEDC_CHANNEL_0, 1000, 8);
+  pinMode(spk_pin, OUTPUT);
+  digitalWrite(spk_pin,LOW);
   ledcAttachPin(spk_pin, LEDC_CHANNEL_0);
-  bool von = false;
-  uint32_t tsound = millis();
-  StaticJsonDocument<1024> vario_curve;
   DeserializationError error = deserializeJson(vario_curve, setting.vario.varioCurve);
-
-  delay(2000);
+  delay(1);
+//  delay(2000);
   sing(spk_pin,0);
-  delay(3000);
+//  delay(3000);
+
+  bzInit = true;
+
   return true;
 }
 
@@ -84,15 +87,13 @@ void Buzzer::run(uint8_t spk_pin){
   uint32_t son = 50; //ms
   uint32_t soff = 50; //ms
 
-  // if volume is 0 then do not beep
-  if (setting.vario.volume == 0) von=false;
-
-  if (setting.vario.volume> 0 && von == false){
-    von = true;
+  if (!status.bMuting && bzInit == false){
+    bzInit = true;
     ledcSetup(LEDC_CHANNEL_0, 1000, 8);
     ledcAttachPin(spk_pin, LEDC_CHANNEL_0);
+    log_i("Attach PinBuzzer to %d", spk_pin);
   }
-  if (von){
+  if (!status.bMuting){
 
     fr = interpolate(vario_curve, status.vario.ClimbRate, "frq");
     son = interpolate(vario_curve, status.vario.ClimbRate, "ton");
@@ -114,18 +115,17 @@ void Buzzer::run(uint8_t spk_pin){
     if (beep || beepTest){
         ledcWriteTone(LEDC_CHANNEL_0, fr);
         ledcWrite(LEDC_CHANNEL_0, setting.vario.volume);
-        tsound = millis();
-        while (millis() - tsound > son){
-          ledcWriteTone(LEDC_CHANNEL_0, 0);
-          ledcWrite(LEDC_CHANNEL_0, 0);
-        }
+        delay(son);
+        ledcWriteTone(LEDC_CHANNEL_0, 0);
     }else{
         ledcWriteTone(LEDC_CHANNEL_0, 0);
         ledcWrite(LEDC_CHANNEL_0, 0);
+        delay(50);
       }
     
   }else{
-    ledcDetachPin(spk_pin);
+    ledcDetachPin(spk_pin); 
+    bzInit = false; 
   }
 
   // TODO Add test speaker single beep check

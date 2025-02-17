@@ -17,8 +17,6 @@ class Buzzer {
   
   private:
     bool bzInit;
-    bool von;
-    uint32_t tsound;
     StaticJsonDocument<1024> vario_curve;
     uint32_t interpolate(StaticJsonDocument<1024> curves, float vval, const char *field);
     void sing(uint8_t spk_pin, int song);

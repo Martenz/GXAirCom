@@ -34,11 +34,9 @@ void SD_file_delete(AsyncWebServerRequest *request){
 
     AsyncWebParameter* p = request->getParam(i);
  
-     Serial.print("Param name: ");
-     Serial.println(p->name());
+     log_i("Param name: %s", p->name());
  
-     Serial.print("Param value: ");
-     Serial.println(p->value());
+     log_i("Param value: %s", p->value());
 
     char igcf[40];
     p->value().toCharArray(igcf,40);
@@ -58,11 +56,9 @@ void SD_file_download(AsyncWebServerRequest *request){
 
     AsyncWebParameter* p = request->getParam(i);
  
-     Serial.print("Param name: ");
-     Serial.println(p->name());
+     log_i("Param name: %s", p->name());
  
-     Serial.print("Param value: ");
-     Serial.println(p->value());
+     log_i("Param value: %s", p->value());
  
     if(p->name()=="igc"){
 #ifdef LILYGO_S3_E_PAPER_V_1_0
@@ -264,8 +260,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       StaticJsonDocument<size> jsonData;
       DeserializationError err = deserializeJson(jsonData, data);
       if (err) {
-            Serial.print(F("deserializeJson() failed with code "));
-            Serial.println(err.c_str());
+            log_e("deserializeJson() failed with code: %s", err.c_str());
             return;
       }
       char value_input[128]; 
@@ -294,9 +289,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       //   strcpy(value_input,jsonData["speaker"]);
       //     if (strcmp(value_input, "test") == 0) {
       //         status.test_speaker = true;
-      //         Serial.println("Testing speaker, you should hear a beep!?");              
+      //         log_i("Testing speaker, you should hear a beep!?");              
       //     }else{
-      //       Serial.println("Something went wrong!");
+      //       log_i("Something went wrong!");
       //     }
       // }
 
@@ -320,7 +315,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       //   status.gps_hz = jsonData["gps_hz"];
       //   status.jsonSettings["gps_hz"] = jsonData["gps_hz"];
       //   Serial.print("Gps frq set to: Hz ");
-      //   Serial.println(status.gps_hz);
+      //   log_i(status.gps_hz);
       //   status.resetGpsHz = true;
       // }
 
@@ -341,15 +336,13 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       //   status.tv_toff = jsonData["tv_toff"]; 
       // }
 
-      // // check sink lift input
-      // if(jsonData.containsKey("sink_on")){
-      //   status.vario_sink_on = jsonData["sink_on"];
-      //   status.jsonSettings["sink_on"] = jsonData["sink_on"];
-      // }
-      // if(jsonData.containsKey("lift_on")){
-      //   status.vario_lift_on = jsonData["lift_on"];
-      //   status.jsonSettings["lift_on"] = jsonData["lift_on"];
-      // }
+      // check sink lift input
+      if(jsonData.containsKey("sink_on")){
+        setting.vario.sinkingThreshold = jsonData["sink_on"];
+      }
+      if(jsonData.containsKey("lift_on")){
+        setting.vario.climbingThreshold = jsonData["lift_on"];
+      }
 
       // // check Kalman and average input
       // if(jsonData.containsKey("kalman_e_mea")){
@@ -379,7 +372,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       // // check vario curve input
       if (jsonData.containsKey("vario_curve")){
         StaticJsonDocument<1024> vario_doc;
-        JsonArray vario_array = vario_doc.to<JsonArray>();
+        JsonArray vario_curve = vario_doc.createNestedArray("vario_curve");
+//        JsonArray vario_array = vario_doc.to<JsonArray>();
 
         for (int i=0;i<sizeof(jsonData["vario_curve"]);i++){
             float vval = jsonData["vario_curve"][i]["vval"];
@@ -387,7 +381,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
             uint32_t ton = jsonData["vario_curve"][i]["ton"];
             uint32_t toff = jsonData["vario_curve"][i]["toff"];
 
-            JsonObject vario_curve_x = vario_array.createNestedObject();
+            JsonObject vario_curve_x = vario_curve.createNestedObject();
             vario_curve_x["vval"] = vval;
             vario_curve_x["frq"] = frq;
             vario_curve_x["ton"] = ton;
@@ -404,7 +398,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
 // //        status.thermal_detect = tdb;
 //         Serial.print("Thermal detect: '");
 //         Serial.print(tdb);
-//         Serial.println("'");
+//         log_i("'");
 //       }
 //       if(jsonData.containsKey("thermal_avg")){
 // //        status.thermal_avg = jsonData["thermal_avg"];
@@ -416,32 +410,32 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       // check if update input to save to SPIFFS setting
       if (jsonData.containsKey("update")){
           if (jsonData["update"] == true) {
-              // Serial.println("Updating json SPIFFS setting.");         
+              // log_i("Updating json SPIFFS setting.");         
               //   if (!SPIFFS.begin(true)) {
-              //     Serial.println("An Error has occurred while mounting SPIFFS");
+              //     log_i("An Error has occurred while mounting SPIFFS");
               //     return;
               //   }     
               //   // Open file for writing
               //   File file = SPIFFS.open(SETTINGS_FileName, FILE_WRITE);
               //   if (!file) {
-              //     Serial.println(F("Failed to create file"));
+              //     log_i(F("Failed to create file"));
               //     return;
               //   }
               //   // Serialize JSON to file
               //   if (serializeJson(status.jsonSettings, file) == 0) {
-              //     Serial.println(F("Failed to write to file"));
+              //     log_i(F("Failed to write to file"));
               //   }              
               //   // Close the file
               //   file.close();
               //   Serial.print("Settings saved to ");
-              //   Serial.println(SETTINGS_FileName); 
+              //   log_i(SETTINGS_FileName); 
 
               // Overwrite preferences with modified setting
               log_i("write config-to preferences");
               write_configFile(&setting);
 
           }else{
-            Serial.println("Something went wrong!");
+            log_i("Something went wrong!");
           }
       }
 
@@ -505,21 +499,21 @@ void WifiServer::end(void){
   //status.e_refresh = true;
 
   log_i("Wifi Server Off.");
-//  Serial.println("Wifi Server Off.");
+//  log_i("Wifi Server Off.");
 }
 
 static void handle_update_progress_cb(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
   uint32_t free_space = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
   if (!index){
-    //Serial.print("Total bytes:    "); Serial.println(SPIFFS.totalBytes());
-    //Serial.print("Used bytes:     "); Serial.println(SPIFFS.usedBytes());
-    //Serial.println(filename);
-    //Serial.println("Update");
+    //Serial.print("Total bytes:    "); log_i(SPIFFS.totalBytes());
+    //Serial.print("Used bytes:     "); log_i(SPIFFS.usedBytes());
+    //log_i(filename);
+    //log_i("Update");
     //log_i("stopping standard-task");
     //vTaskDelete(xHandleStandard); //delete standard-task    
     WebUpdateRunning = true;
     delay(500); //wait 1 second until tasks are stopped
-    Serial.println("webupdate starting");      
+    log_i("webupdate starting");      
     //Update.runAsync(true);
     if (filename.startsWith("spiffs")){
 //      if (!Update.begin(0x30000,U_SPIFFS)) {
@@ -541,7 +535,7 @@ static void handle_update_progress_cb(AsyncWebServerRequest *request, String fil
     if (!Update.end(true)){
       Update.printError(Serial);
     } else {
-      Serial.println("Update complete");      
+      log_i("Update complete");      
       delay(1000);
       ESP.restart();
     }
@@ -550,28 +544,28 @@ static void handle_update_progress_cb(AsyncWebServerRequest *request, String fil
 
 void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
   String logmessage = "Client:" + request->client()->remoteIP().toString() + " " + request->url();
-  Serial.println(logmessage);
+  log_i("%s", logmessage);
 
   if (!index) {
     logmessage = "Upload Start: " + String(filename);
     // open the file on first call and store the file handle in the request object
     request->_tempFile = SPIFFS.open(SETTINGS_FileName, "w");
-    Serial.println(logmessage);
+    log_i("%s",logmessage);
   }
 
   if (len) {
     // stream the incoming chunk to the opened file
     request->_tempFile.write(data, len);
     logmessage = "Writing file: " + String(filename) + " index=" + String(index) + " len=" + String(len);
-    Serial.println(logmessage);
+    log_i("%s", logmessage);
   }
 
   if (final) {
     logmessage = "Upload Complete: " + String(filename) + ",size: " + String(index + len);
     // close the file handle as the upload is now done
     request->_tempFile.close();
-    Serial.println(logmessage);
-    Serial.println("Overriding /setting.json");
+    log_i("%s", logmessage);
+    log_i("Overriding /setting.json");
     request->redirect("/setting");
   }
 }
@@ -588,7 +582,7 @@ bool WifiServer::begin(uint8_t type){
     const char* mypassword =  "12345678";
 
     log_i("switch WIFI ACCESS-POINT ON");
-//    Serial.println("switch WIFI ACCESS-POINT ON");
+//    log_i("switch WIFI ACCESS-POINT ON");
     WiFi.disconnect(true,true);
     WiFi.mode(WIFI_OFF);
     WiFi.persistent(false);
@@ -597,7 +591,7 @@ bool WifiServer::begin(uint8_t type){
     //WiFi.softAPConfig(local_IP, gateway, subnet);
 
     if(!SPIFFS.begin()){
-     Serial.println("An Error has occurred while mounting SPIFFS");
+     log_i("An Error has occurred while mounting SPIFFS");
      return false;
     }
     strcpy(myssid,"TzI-Wifi-");
@@ -618,7 +612,7 @@ bool WifiServer::begin(uint8_t type){
     initWebSocket();
   
   // Serial.print("IP: ");
-  // Serial.println(WiFi.softAPIP());
+  // log_i(WiFi.softAPIP());
   // WiFi.softAPIP().toString().toCharArray(status.wifiAPip,12,0);
  
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -638,17 +632,15 @@ bool WifiServer::begin(uint8_t type){
     
     //strcpy(status.folder_path,IGCFOLDER);
     int paramsNr = request->params();
-    Serial.println(paramsNr);
+    log_i("paramsNr: %d", paramsNr);
     if (paramsNr){
       for(int i=0;i<paramsNr;i++){
 
         AsyncWebParameter* p = request->getParam(i);
     
-        Serial.print("Param name: ");
-        Serial.println(p->name());
+        log_i("Param name: %s", p->name());
     
-        Serial.print("Param value: ");
-        Serial.println(p->value());
+        log_i("Param value: %s", p->value());
 
         if (p->name()=="folder"){
 //          strcpy(status.folder_path,p->value().c_str());

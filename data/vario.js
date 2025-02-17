@@ -123,7 +123,7 @@ var default_curve={0:[
         document.getElementById('thermal_avg').value = data.thermal_avg;
 
         const saved_curve = JSON.parse(data.vario_curve);
-        curve = saved_curve ? saved_curve : default_curve[0];
+        curve = saved_curve ? saved_curve["vario_curve"] : default_curve[0];
         drawVarioCurve();
 
         only_once = false;

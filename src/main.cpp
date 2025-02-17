@@ -172,7 +172,10 @@ int resolution = 8;
 
 #ifdef USE_BEEPERTZI
 #include <BeeperTzi.h>
-Buzzer buzzer;
+Buzzer buzzer; 
+int freq = 1000;
+int channel = 0;
+int resolution = 8;
 #endif
 
 #endif
@@ -365,6 +368,10 @@ uint32_t calcSleepTime();
 #ifdef AIRMODULE
 void readGPS();
 void taskBaro(void *pvParameters);
+#ifdef USE_BEEPERTZI
+void taskBUZZER(void *pvParameters);
+TaskHandle_t xHandleBUZZER = NULL;
+#endif
 #endif
 #ifdef EINK
 void taskEInk(void *pvParameters);
@@ -1740,11 +1747,11 @@ void loadVarioCurve() {
     delay(50);
 
     log_i("Vario curve:");
-    for (int i=0;i<sizeof(vario_curve);i++){
-      float vval = vario_curve[i]["vval"];
-      int frq = vario_curve[i]["frq"];
-      int ton = vario_curve[i]["ton"];
-      int toff = vario_curve[i]["toff"];
+    for (int i=0;i<sizeof(vario_curve["vario_curve"]);i++){
+      float vval = vario_curve["vario_curve"][i]["vval"];
+      int frq = vario_curve["vario_curve"][i]["frq"];
+      int ton = vario_curve["vario_curve"][i]["ton"];
+      int toff = vario_curve["vario_curve"][i]["toff"];
       log_i("vval: %f frq: %d ton: %d toff %d",vval,frq,ton,toff);
     }
 
@@ -1815,7 +1822,7 @@ void setup() {
   }
   //listSpiffsFiles();
   load_configFile(&setting); //load configuration
-  delay(50);
+  delay(500);
   loadVarioCurve();
   delay(50);
   //setting.RFMode = setting.RFMode & 0x03; //only FANET allowed !!
@@ -2476,9 +2483,9 @@ void setup() {
   buttonConfig->setFeature(ace_button::ButtonConfig::kFeatureDoubleClick);
   buttonConfig->setFeature(ace_button::ButtonConfig::kFeatureLongPress);
   buttonConfig->setFeature(ace_button::ButtonConfig::kFeatureRepeatPress);
-  buttonConfig->setDebounceDelay(20); //set debounce-delay to 20ms
+  buttonConfig->setDebounceDelay(50); //set debounce-delay to 20ms
   buttonConfig->setLongPressDelay(1000); //set long-press-delay to 500ms
-  buttonConfig->setClickDelay(500); //set click-delay to 200ms
+  buttonConfig->setClickDelay(200); //set click-delay to 200ms
 
 
   if (PinBeaconLed >= 0) {
@@ -2550,6 +2557,9 @@ xOutputMutex = xSemaphoreCreateMutex();
     //#ifndef S3CORE  //still in progress
     xTaskCreatePinnedToCore(taskBaro, "taskBaro", 6500, NULL, 9, &xHandleBaro, ARDUINO_RUNNING_CORE1); //high priority task
     //#endif
+    #ifdef USE_BEEPERTZI
+    xTaskCreatePinnedToCore(taskBUZZER, "taskBUZZER", 6500, NULL, 11, &xHandleBUZZER, ARDUINO_RUNNING_CORE0); //buzzer task higher priority
+    #endif
   }
 #endif  
   //log_i("currHeap:%d,minHeap:%d", xPortGetFreeHeapSize(), xPortGetMinimumEverFreeHeapSize());
@@ -3385,9 +3395,7 @@ void taskBaro(void *pvParameters){
     ledcAttachPin(PinBuzzer, channel);
   }
 #endif  
-#ifdef USE_BEEPERTZI
-  buzzer.begin(PinBuzzer);
-#endif
+
   baro.useMPU(setting.vario.useMPU);
   #ifdef S3CORE
   uint8_t baroSensor = baro.begin(pI2cOne,&xI2C1Mutex);
@@ -3459,9 +3467,7 @@ void taskBaro(void *pvParameters){
         Beeper.setVolume(setting.vario.volume);
       }
 #endif
-#ifdef USE_BEEPERTZI
-      buzzer.run(PinBuzzer);
-#endif
+
       baro.run();
       if (setting.vario.useMPU){
         baro.getMPUValues(&status.vario.accel[0],&status.vario.gyro[0],&status.vario.acc_Z);
@@ -3489,12 +3495,28 @@ void taskBaro(void *pvParameters){
     }
   }
   baro.end();
-#ifdef USE_BEEPERTZI
-  buzzer.end(PinBuzzer);
-#endif
   log_i("stop task");
   vTaskDelete(xHandleBaro); //delete baro-task
 }
+#endif
+
+#ifdef USE_BEEPERTZI
+void taskBUZZER(void *pvParameters){
+
+  buzzer.begin(PinBuzzer);
+
+  while(1){
+      buzzer.run(PinBuzzer);
+      delay(1);
+      if ((WebUpdateRunning) || (bPowerOff)) break;
+  }
+
+  buzzer.end(PinBuzzer);
+
+  log_i("stop task BUZZER");
+  vTaskDelete( xHandleBUZZER );
+}
+
 #endif
 
 void loop() {
@@ -5300,6 +5322,9 @@ void powerOff(){
 
   log_i("wait until all tasks are stopped");
   eTaskState tBaro = eDeleted;
+#ifdef USE_BEEPERTZI
+  eTaskState tBuzzer = eDeleted;
+#endif
   eTaskState tEInk = eDeleted;
   eTaskState tOled = eDeleted;
   eTaskState tStandard = eDeleted;
@@ -5312,12 +5337,20 @@ void powerOff(){
     //wait until all tasks are stopped
     if (xHandleLogger != NULL) tLogger = eTaskGetState(xHandleLogger);
     if (xHandleBaro != NULL) tBaro = eTaskGetState(xHandleBaro);
+#ifdef USE_BEEPERTZI
+    if (xHandleBUZZER != NULL) tBuzzer = eTaskGetState(xHandleBUZZER);
+#endif
     if (xHandleEInk != NULL) tEInk = eTaskGetState(xHandleEInk);
     if (xHandleOled != NULL) tOled = eTaskGetState(xHandleOled);
     if (xHandleStandard != NULL) tStandard = eTaskGetState(xHandleStandard);
     if (xHandleWeather != NULL) tWeather = eTaskGetState(xHandleWeather);    
+#ifdef USE_BEEPERTZI
+  if ((tLogger == eDeleted) && (tBaro == eDeleted) && (tBuzzer == eDeleted) && (tEInk == eDeleted) && (tWeather == eDeleted) && (tStandard == eDeleted) && (tOled == eDeleted)) break; //now all tasks are stopped
+  log_i("logger=%d,baro=%d,buzzer=%d,eink=%d,oled=%d,standard=%d,weather=%d",tLogger,tBaro,tBuzzer,tOled,tStandard,tWeather);
+#else
     if ((tLogger == eDeleted) && (tBaro == eDeleted) && (tEInk == eDeleted) && (tWeather == eDeleted) && (tStandard == eDeleted) && (tOled == eDeleted)) break; //now all tasks are stopped
     log_i("logger=%d,baro=%d,eink=%d,oled=%d,standard=%d,weather=%d",tLogger,tBaro,tEInk,tOled,tStandard,tWeather);
+#endif
     delay(1000);
   }
   #ifdef GSM_MODULE
@@ -5893,12 +5926,12 @@ void taskBackGround(void *pvParameters){
     }
     handleUpdate(tAct);
     #else
-      // if( ((millis()/100)*100) % 5000 == 0){
-      //   //Serial.println("Clean Clients.");
-      //   wifiserver.wifiCleanClients();
-      // }
+      if( ((millis()/20)*20) % 5000 == 0){
+        //Serial.println("Clean Clients.");
+        wifiserver.wifiCleanClients();
+      }
       if (setting.wifi.tWifiStop>0 && timeOver(tAct, tWifiCheck, setting.wifi.tWifiStop*1000) ){
-        if (status.wifiSTA.state != DISCONNECTED){
+        if (status.wifiSTA.state != IDLE){
           status.wifiSTA.state = IDLE;
           wifiserver.end();  
         }
