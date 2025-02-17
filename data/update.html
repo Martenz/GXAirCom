@@ -110,6 +110,7 @@
                     uploadForm.querySelector('.result').innerHTML = "Update complete!";
                     var clouds = document.getElementsByClassName("cloud");
                     Array.from(clouds).forEach(c => c.innerHTML = "Complete");
+                    loader.style.display = "none";
                 }
             };
             // Execute request

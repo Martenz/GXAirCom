@@ -27,6 +27,7 @@
 #ifndef TZICODE
  #include "WebHelper.h"
 #else
+// #include "melodies.h"
  #include "wifiServer.h"
  ///WifiServer
  WifiServer wifiserver;
@@ -167,6 +168,11 @@ beeper Beeper(BEEP_VELOCITY_DEFAULT_SINKING_THRESHOLD,BEEP_VELOCITY_DEFAULT_CLIM
 int freq = 2000;
 int channel = 0;
 int resolution = 8;
+#endif
+
+#ifdef USE_BEEPERTZI
+#include <BeeperTzi.h>
+Buzzer buzzer;
 #endif
 
 #endif
@@ -1727,6 +1733,23 @@ void readPGXCFSentence(const char* data)
   ESP.restart();
 }
 
+void loadVarioCurve() {
+
+    StaticJsonDocument<1024> vario_curve;
+    DeserializationError error = deserializeJson(vario_curve, setting.vario.varioCurve);
+    delay(50);
+
+    log_i("Vario curve:");
+    for (int i=0;i<sizeof(vario_curve);i++){
+      float vval = vario_curve[i]["vval"];
+      int frq = vario_curve[i]["frq"];
+      int ton = vario_curve[i]["ton"];
+      int toff = vario_curve[i]["toff"];
+      log_i("vval: %f frq: %d ton: %d toff %d",vval,frq,ton,toff);
+    }
+
+}
+
 void setup() {
 
   Serial.begin(115200);
@@ -1792,6 +1815,9 @@ void setup() {
   }
   //listSpiffsFiles();
   load_configFile(&setting); //load configuration
+  delay(50);
+  loadVarioCurve();
+  delay(50);
   //setting.RFMode = setting.RFMode & 0x03; //only FANET allowed !!
   //setting.wifi.connect = eWifiMode::CONNECT_NONE;
   #ifdef GSM_MODULE
@@ -3359,6 +3385,9 @@ void taskBaro(void *pvParameters){
     ledcAttachPin(PinBuzzer, channel);
   }
 #endif  
+#ifdef USE_BEEPERTZI
+  buzzer.begin(PinBuzzer);
+#endif
   baro.useMPU(setting.vario.useMPU);
   #ifdef S3CORE
   uint8_t baroSensor = baro.begin(pI2cOne,&xI2C1Mutex);
@@ -3430,6 +3459,9 @@ void taskBaro(void *pvParameters){
         Beeper.setVolume(setting.vario.volume);
       }
 #endif
+#ifdef USE_BEEPERTZI
+      buzzer.run(PinBuzzer);
+#endif
       baro.run();
       if (setting.vario.useMPU){
         baro.getMPUValues(&status.vario.accel[0],&status.vario.gyro[0],&status.vario.acc_Z);
@@ -3457,6 +3489,9 @@ void taskBaro(void *pvParameters){
     }
   }
   baro.end();
+#ifdef USE_BEEPERTZI
+  buzzer.end(PinBuzzer);
+#endif
   log_i("stop task");
   vTaskDelete(xHandleBaro); //delete baro-task
 }

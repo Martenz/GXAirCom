@@ -122,6 +122,16 @@ void load_configFile(SettingsData* pSetting){
   pSetting->vario.tempOffset = preferences.getFloat("vTOffs",0.0);
   pSetting->vario.sigmaP = preferences.getFloat("vSigmaP",0.1);
   pSetting->vario.sigmaA = preferences.getFloat("vSigmaA",0.6);
+    // vario curve
+    pSetting->vario.varioCurve = preferences.getString("vCurve","[\
+      {\"vval\":10,\"frq\":2000,\"ton\":100,\"toff\":100},\
+      {\"vval\":5,\"frq\":1500,\"ton\":200,\"toff\":100},\
+      {\"vval\":2.5,\"frq\":1250,\"ton\":200,\"toff\":150},\
+      {\"vval\":0.5,\"frq\":1000,\"ton\":200,\"toff\":200},\
+      {\"vval\":0,\"frq\":0,\"ton\":0,\"toff\":50},\
+      {\"vval\":-2.5,\"frq\":450,\"ton\":250,\"toff\":750},\
+      {\"vval\":-5,\"frq\":250,\"ton\":500,\"toff\":1000},\
+      {\"vval\":-10,\"frq\":200,\"ton\":500,\"toff\":1000}]");
 
   //wu-upload
   pSetting->WUUpload.enable = preferences.getUChar("WUUlEnable",0);
@@ -273,6 +283,8 @@ void write_configFile(SettingsData* pSetting){
   preferences.putFloat("vTOffs",pSetting->vario.tempOffset);
   preferences.putFloat("vSigmaP",pSetting->vario.sigmaP);
   preferences.putFloat("vSigmaA",pSetting->vario.sigmaA);
+    // vario curve
+    preferences.putString("vCurve", pSetting->vario.varioCurve);
 
   //weathersettings
   preferences.putUChar("WsMode",pSetting->wd.mode.mode);

@@ -174,7 +174,7 @@ String processor(const String& var)
     stringReturn += "</tbody></table>";
     return stringReturn;
   }else if (var == "VARIO_CURVE"){
-    return  "";//status.jsonSettings["vario_curve"];
+    return  setting.vario.varioCurve;
   }
  
   return "";
@@ -245,7 +245,7 @@ void WifiServer::wifiNotifyClients(void){
 
     json["rfmode"] = setting.RFMode;
 
-//    json["vario_curve"] = status.jsonSettings["vario_curve"];
+    json["vario_curve"] = setting.vario.varioCurve;
 
     char data[2048];
     size_t len = serializeJson(json, data);
@@ -377,23 +377,25 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       // }
 
       // // check vario curve input
-      // if (jsonData.containsKey("vario_curve")){
-      //   status.jsonSettings.remove("vario_curve");
-      //   JsonArray vario_curve = status.jsonSettings.createNestedArray("vario_curve");
+      if (jsonData.containsKey("vario_curve")){
+        StaticJsonDocument<1024> vario_doc;
+        JsonArray vario_array = vario_doc.to<JsonArray>();
 
-      //   for (int i=0;i<sizeof(jsonData["vario_curve"]);i++){
-      //       float vval = jsonData["vario_curve"][i]["vval"];
-      //       uint32_t frq = jsonData["vario_curve"][i]["frq"];
-      //       uint32_t ton = jsonData["vario_curve"][i]["ton"];
-      //       uint32_t toff = jsonData["vario_curve"][i]["toff"];
+        for (int i=0;i<sizeof(jsonData["vario_curve"]);i++){
+            float vval = jsonData["vario_curve"][i]["vval"];
+            uint32_t frq = jsonData["vario_curve"][i]["frq"];
+            uint32_t ton = jsonData["vario_curve"][i]["ton"];
+            uint32_t toff = jsonData["vario_curve"][i]["toff"];
 
-      //       JsonObject vario_curve_x = vario_curve.createNestedObject();
-      //       vario_curve_x["vval"] = vval;
-      //       vario_curve_x["frq"] = frq;
-      //       vario_curve_x["ton"] = ton;
-      //       vario_curve_x["toff"] = toff;
-      //   }
-      // }
+            JsonObject vario_curve_x = vario_array.createNestedObject();
+            vario_curve_x["vval"] = vval;
+            vario_curve_x["frq"] = frq;
+            vario_curve_x["ton"] = ton;
+            vario_curve_x["toff"] = toff;
+        }
+        setting.vario.varioCurve = "";
+        serializeJson(vario_doc, setting.vario.varioCurve);
+      }
 
 //       // check Thermal detect input
 //       if (jsonData.containsKey("thermal_detect")){
@@ -435,7 +437,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
               //   Serial.println(SETTINGS_FileName); 
 
               // Overwrite preferences with modified setting
-              log_i("write config-to file");
+              log_i("write config-to preferences");
               write_configFile(&setting);
 
           }else{

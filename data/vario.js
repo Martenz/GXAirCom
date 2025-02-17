@@ -28,6 +28,8 @@ var audioContext = null;
 var oscillatorNode = null;
 var stopTime = 0;
 
+var curve;
+
 var default_curve={0:[
     {"vval":10,"frq":2000,"ton":100,"toff":100},
     {"vval":5,"frq":1500,"ton":200,"toff":100},
@@ -119,6 +121,10 @@ var default_curve={0:[
 
         document.getElementById('thermal_detect').checked = data.thermal_detect;
         document.getElementById('thermal_avg').value = data.thermal_avg;
+
+        const saved_curve = JSON.parse(data.vario_curve);
+        curve = saved_curve ? saved_curve : default_curve[0];
+        drawVarioCurve();
 
         only_once = false;
         hideLoader();

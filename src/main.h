@@ -267,6 +267,7 @@ struct VarioSettings{
   float tempOffset;
   float sigmaP;
   float sigmaA;
+  String varioCurve;
 };
 
 	struct MqttModeBits
