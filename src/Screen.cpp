@@ -747,31 +747,56 @@ void Screen::drawMainScreen(void){
           switch (setting.AircraftType)
           {
           case FanetLora::paraglider :
-              pEInk->drawXBitmap(0, DY_PILOT, Paraglider16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
+              pEInk->drawXBitmap(4, DY_PILOT, Paraglider16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
               break;
           case FanetLora::hangglider :
-              pEInk->drawXBitmap(0, DY_PILOT, Hangglider16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
+              pEInk->drawXBitmap(4, DY_PILOT, Hangglider16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
               break;
           case FanetLora::balloon :
-              pEInk->drawXBitmap(0, DY_PILOT, Ballon16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
+              pEInk->drawXBitmap(4, DY_PILOT, Ballon16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
               break;
           case FanetLora::glider :
-              pEInk->drawXBitmap(0, DY_PILOT, Sailplane16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
+              pEInk->drawXBitmap(4, DY_PILOT, Sailplane16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
               break;
           case FanetLora::poweredAircraft :
-              pEInk->drawXBitmap(0, DY_PILOT, Airplane16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
+              pEInk->drawXBitmap(4, DY_PILOT, Airplane16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
               break;
           case FanetLora::helicopter :
-              pEInk->drawXBitmap(0, DY_PILOT, Helicopter16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
+              pEInk->drawXBitmap(4, DY_PILOT, Helicopter16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
               break;
           case FanetLora::uav :
-              pEInk->drawXBitmap(0, DY_PILOT, UAV16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
+              pEInk->drawXBitmap(4, DY_PILOT, UAV16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
               break;
 
           default:
-              pEInk->drawXBitmap(0, DY_PILOT, UFO16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
+              pEInk->drawXBitmap(4, DY_PILOT, UFO16_bits, 16, 16, GxEPD_BLACK);   //GxEPD_BLACK);
               break;
           }
+          
+          if (status.fanetTx>0){
+            pEInk->setFont(&NotoSansBold6pt7b);
+            pEInk->setCursor(110,DY_PILOT + 5);
+            if (status.fanetRx>0){
+              pEInk->fillRoundRect(108, DY_PILOT - 5, 11, 13, 2, GxEPD_BLACK);
+              pEInk->setTextColor(GxEPD_WHITE);
+            }else{
+              pEInk->drawRoundRect(108, DY_PILOT - 5, 11, 13, 2, GxEPD_BLACK);
+            }
+            pEInk->print("F");
+          }
+          if (status.legTx>0){
+            pEInk->setFont(&NotoSansBold6pt7b);
+            pEInk->setCursor(110,DY_PILOT + 20);
+            if (status.legRx>0){
+              pEInk->fillRoundRect(108, DY_PILOT + 10, 11, 13, 2, GxEPD_BLACK);
+              pEInk->setTextColor(GxEPD_WHITE);
+            }else{
+              pEInk->drawRoundRect(108, DY_PILOT + 10, 11, 13, 2, GxEPD_BLACK);
+            }
+            pEInk->print("L");
+          }
+          pEInk->setTextColor(GxEPD_BLACK);
+
           drawSatCount(18-DX_ICONS,0,26,16,data.SatCount);
           pEInk->drawFastHLine(0,52,pEInk->width(),GxEPD_BLACK);
           pEInk->setFont(&gnuvarioe23pt7b);
