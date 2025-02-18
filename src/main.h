@@ -209,10 +209,15 @@ SCL 14
 //#define BUTTON2 38
 #define LONGPRESSTIME 250
 
-#define LOWVOLUME 50
-#define MIDVOLUME 80
-#define HIGHVOLUME 127
-
+#ifdef USE_BEEPERTZI
+ #define LOWVOLUME 15
+ #define MIDVOLUME 55
+ #define HIGHVOLUME 255
+#else
+ #define LOWVOLUME 50
+ #define MIDVOLUME 80
+ #define HIGHVOLUME 127
+#endif
 #define DISPLAY_UPDATE_RATE 500
 #define DISPLAY_UPDATE_RATE2 2000
 #define DISPLAY_UPDATE_RATE_GS 2000
@@ -568,6 +573,7 @@ struct statusData{
   uint8_t MqttStat;
   statusRestart restart;
   statusRtc rtc;
+  bool webUpdateBuzzerOff;
 };
 
 //define wifi-events on for old framework

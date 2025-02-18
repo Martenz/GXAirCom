@@ -1764,6 +1764,7 @@ void setup() {
 
   setting.sd_size = 0;
 
+  status.webUpdateBuzzerOff = false;
   status.restart.doRestart = false;
   status.bPowerOff = false;
   status.bWUBroadCast = false;
@@ -2483,8 +2484,8 @@ void setup() {
   buttonConfig->setFeature(ace_button::ButtonConfig::kFeatureDoubleClick);
   buttonConfig->setFeature(ace_button::ButtonConfig::kFeatureLongPress);
   buttonConfig->setFeature(ace_button::ButtonConfig::kFeatureRepeatPress);
-  buttonConfig->setDebounceDelay(50); //set debounce-delay to 20ms
-  buttonConfig->setLongPressDelay(1000); //set long-press-delay to 500ms
+  buttonConfig->setDebounceDelay(20); //set debounce-delay to 20ms
+  buttonConfig->setLongPressDelay(500); //set long-press-delay to 500ms
   buttonConfig->setClickDelay(200); //set click-delay to 200ms
 
 
@@ -3508,6 +3509,7 @@ void taskBUZZER(void *pvParameters){
   while(1){
       buzzer.run(PinBuzzer);
       delay(1);
+      if (status.webUpdateBuzzerOff) WebUpdateRunning = true;
       if ((WebUpdateRunning) || (bPowerOff)) break;
   }
 
@@ -4824,6 +4826,7 @@ void taskStandard(void *pvParameters){
     sButton[0].state =  0;
     //check Button 1
     if (sButton[1].state == ace_button::AceButton::kEventClicked){
+      log_i("Button clicked");
       if (status.bMuting){
         status.bMuting = false; //undo muting
       }else{
@@ -4838,7 +4841,23 @@ void taskStandard(void *pvParameters){
       }
       //log_i("volume=%d",setting.vario.volume);
     }else if (sButton[1].state == ace_button::AceButton::kEventLongPressed){
+      log_i("Button clicked LongPress");
+#ifndef USE_BEEPERTZI
       status.bMuting = !status.bMuting; //toggle muting
+#else
+        if (setting.vario.volume == 0){
+          status.bMuting = false;
+          setting.vario.volume = LOWVOLUME;
+        }else if (setting.vario.volume == LOWVOLUME){
+          setting.vario.volume = MIDVOLUME;  
+        }else if (setting.vario.volume == MIDVOLUME){
+          setting.vario.volume = HIGHVOLUME;  
+        }else if (setting.vario.volume == HIGHVOLUME){
+          setting.vario.volume = 0;  
+          status.bMuting = true;
+        }
+        write_Volume();
+#endif
     }
     sButton[1].state = 0;
 

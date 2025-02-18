@@ -38,7 +38,6 @@ extern struct commandData command;
 // IPAddress subnet(255,255,255,0);
 
 extern String compile_date;
-extern bool WebUpdateRunning;
 
 class WifiServer {
 public:

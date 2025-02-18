@@ -270,7 +270,14 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
 
           if (jsonData.containsKey("pilot_name")) setting.PilotName = jsonData["pilot_name"].as<String>();
           if (jsonData.containsKey("utc_offset")) setting.utc_offset = jsonData["utc_offset"].as<int8_t>();
-          if (jsonData.containsKey("volume")) setting.vario.volume = jsonData["volume"].as<uint8_t>();
+          if (jsonData.containsKey("volume")) {
+            setting.vario.volume = jsonData["volume"].as<uint8_t>();
+            if (setting.vario.volume >0) {
+              status.bMuting = false;
+            } else {
+              status.bMuting = true;
+            }
+          }
           if (jsonData.containsKey("rotation")) setting.displayRotation = jsonData["rotation"].as<uint8_t>();
           //if (jsonData.containsKey("t_refresh")) ...
           if (jsonData.containsKey("beep_when_f")) setting.vario.BeepOnlyWhenFlying = jsonData["beep_when_f"].as<bool>();
@@ -511,7 +518,7 @@ static void handle_update_progress_cb(AsyncWebServerRequest *request, String fil
     //log_i("Update");
     //log_i("stopping standard-task");
     //vTaskDelete(xHandleStandard); //delete standard-task    
-    WebUpdateRunning = true;
+    status.webUpdateBuzzerOff = true;
     delay(500); //wait 1 second until tasks are stopped
     log_i("webupdate starting");      
     //Update.runAsync(true);

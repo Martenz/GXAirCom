@@ -6,9 +6,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <title>Tz Instruments - Update</title>
 </head>
+<style>#loader.show{display:block!important};</style>
 <body>
 <div id="needToRestart">%NEEDTORESTART%</div>
-<div id="loader">
+<div id="loader" class="hide">
     <div id="background-wrap">
         <div class="x1">
             <div class="cloud">UPDATING</div>
@@ -82,7 +83,8 @@
             alert('Please select a file!');
         } else {
             var loader = document.getElementById("loader");
-            loader.style.display = "block";
+            loader.classList.add("show");
+//            loader.style.display = "block";
             // Create the form object
             let uploadFormDate = new FormData(uploadForm);
             // Initiate the AJAX request
@@ -110,7 +112,7 @@
                     uploadForm.querySelector('.result').innerHTML = "Update complete!";
                     var clouds = document.getElementsByClassName("cloud");
                     Array.from(clouds).forEach(c => c.innerHTML = "Complete");
-                    loader.style.display = "none";
+                    loader.classList.remove("show");
                 }
             };
             // Execute request
