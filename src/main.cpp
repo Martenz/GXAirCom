@@ -109,6 +109,11 @@ XPowersLibInterface *PMU = NULL;
 //#include "driver/rtc_io.h"
 #endif
 
+#ifdef LILYGO_S3_E_PAPER_V_1_0
+#include <Logger.h>
+void taskLogger(void *pvParameters);
+
+#endif
 
 #ifdef GSMODULE
 
@@ -2560,6 +2565,9 @@ xOutputMutex = xSemaphoreCreateMutex();
     //#endif
     #ifdef USE_BEEPERTZI
     xTaskCreatePinnedToCore(taskBUZZER, "taskBUZZER", 6500, NULL, 11, &xHandleBUZZER, ARDUINO_RUNNING_CORE0); //buzzer task higher priority
+    #endif
+    #ifdef LILYGO_S3_E_PAPER_V_1_0
+    xTaskCreatePinnedToCore(taskLogger, "taskLogger", 6500, NULL, 4, &xHandleLogger, ARDUINO_RUNNING_CORE1); //background Logger
     #endif
   }
 #endif  
@@ -5738,6 +5746,44 @@ void taskLogger(void * pvPArameters){
   log_i("stop task");
   vTaskDelete(xHandleLogger);
 }
+#endif
+
+#ifdef LILYGO_S3_E_PAPER_V_1_0
+void taskLogger(void * pvPArameters){
+
+  Logger logger;
+
+  bool init_logger = false;
+
+    while(1){
+      if(status.sdReady){
+        if(!init_logger){
+          init_logger = logger.begin();          
+        }else{
+          if(!status.stopLog){
+            logger.run();  
+          }
+          if (status.stopLog){
+            if(status.logging){
+              logger.end();
+              status.logging = false;
+            }
+          }   
+        }
+      }else{
+        break;
+      }
+
+      if ((WebUpdateRunning) || (bPowerOff)) break;
+      delay(500);
+    }
+  if(status.logging) logger.end();
+  // log_i("stop task");
+  // Serial.println("stop taskLOGGER");
+  log_i("stop taskLOGGER");
+  vTaskDelete(xHandleLogger);
+}
+
 #endif
 
 #if defined(SSD1306) || defined(SH1106G)
