@@ -233,9 +233,9 @@
    strcat(headers,"\r");
    strcat(headers,IGC_ROW4);
      strcpy(hfrows,IGC_ROW4);
-   if (settings.PilotName) {
-     strcat(headers, settings.PilotName.c_str());
-       strcat(hfrows,settings.PilotName.c_str());
+   if (setting.PilotName) {
+     strcat(headers, setting.PilotName.c_str());
+       strcat(hfrows,setting.PilotName.c_str());
    } 
      updateHash(hfrows);
    strcat(headers,"\r");

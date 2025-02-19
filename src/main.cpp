@@ -1768,6 +1768,8 @@ void setup() {
   delay(3000);
 
   setting.sd_size = 0;
+  status.sdReady = false;
+  status.logging = false;
 
   status.webUpdateBuzzerOff = false;
   status.restart.doRestart = false;
@@ -5760,15 +5762,7 @@ void taskLogger(void * pvPArameters){
         if(!init_logger){
           init_logger = logger.begin();          
         }else{
-          if(!status.stopLog){
             logger.run();  
-          }
-          if (status.stopLog){
-            if(status.logging){
-              logger.end();
-              status.logging = false;
-            }
-          }   
         }
       }else{
         break;

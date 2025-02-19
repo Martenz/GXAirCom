@@ -95,6 +95,7 @@ bool Screen::begin(uint8_t type,int8_t cs,int8_t dc,int8_t rst,int8_t busy,int8_
         log_i("SD init success");
         log_i("SD Card insert:%.2f GB",SD.cardSize() / 1024.0 / 1024.0 / 1024.0);
         setting.sd_size = SD.cardSize();
+        status.sdReady = true;
     }
 
   // Select the custom SPI bus and settings for the e-ink display
@@ -794,6 +795,11 @@ void Screen::drawMainScreen(void){
               pEInk->drawRoundRect(108, DY_PILOT + 10, 11, 13, 2, GxEPD_BLACK);
             }
             pEInk->print("L");
+          }
+
+          if (status.sdReady){
+            pEInk->fillRect(5,45, 16, 7, GxEPD_BLACK);
+            pEInk->fillTriangle(5,45, 9, 45, 5, 48, GxEPD_WHITE);
           }
           pEInk->setTextColor(GxEPD_BLACK);
 

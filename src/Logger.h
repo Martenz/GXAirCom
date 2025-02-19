@@ -5,7 +5,7 @@
  */
 
  extern struct statusData status;
- extern struct SettingsData settings;
+ extern struct SettingsData setting;
  
 
  #ifndef __LOGGER_H__
