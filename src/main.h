@@ -574,6 +574,9 @@ struct statusData{
   statusRestart restart;
   statusRtc rtc;
   bool webUpdateBuzzerOff;
+  bool sdReady;
+  bool logging;
+
 };
 
 //define wifi-events on for old framework
