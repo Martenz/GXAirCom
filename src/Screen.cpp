@@ -798,8 +798,14 @@ void Screen::drawMainScreen(void){
           }
 
           if (status.sdReady){
-            pEInk->fillRect(5,45, 16, 7, GxEPD_BLACK);
-            pEInk->fillTriangle(5,45, 9, 45, 5, 48, GxEPD_WHITE);
+            pEInk->fillRect(5,44, 16, 8, GxEPD_BLACK);
+            pEInk->fillTriangle(5,44, 9, 44, 5, 47, GxEPD_WHITE);
+            if (status.logging){
+              pEInk->fillCircle(25, 46, 3, GxEPD_BLACK);
+            }else{
+              pEInk->fillCircle(25, 46, 3, GxEPD_WHITE);
+              pEInk->drawCircle(25, 46, 3, GxEPD_BLACK);
+            }
           }
           pEInk->setTextColor(GxEPD_BLACK);
 
