@@ -576,6 +576,7 @@ struct statusData{
   bool webUpdateBuzzerOff;
   bool sdReady;
   bool logging;
+  char folder_path[64];
 
 };
 

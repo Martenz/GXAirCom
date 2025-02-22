@@ -129,11 +129,11 @@ String processor(const String& var)
     stringReturn = "";
     bool getfiles = false;
 
-//    if(String(status.folder_path) == "none"){
+    if(String(status.folder_path) == "none"){
       strcpy(igc_dir,IGCFOLDER);
-//    }else{
-//      strcpy(igc_dir,status.folder_path);
-//    }
+   }else{
+     strcpy(igc_dir,status.folder_path);
+   }
 
     stringReturn += "<table><thead><tr><th>SD Folder: </th><th id='folder_path'></th></tr></thead><tbody>";
 
@@ -158,7 +158,7 @@ String processor(const String& var)
           stringReturn += "</button></td>";
           if(String(d).indexOf(".igc") > 0){
             stringReturn += "<td><button title='Delete' class='button bred' type='button'>";
-            stringReturn += "<a href='/deleteigc?igc="+String(d)+"' target='_self'>";
+            stringReturn += "<a class='igc-del' href='/deleteigc?igc="+String(d)+"' target='_self'>";
             stringReturn += " X </a></button></td>";
           }else{
             stringReturn += "<td></td>";
@@ -637,7 +637,7 @@ bool WifiServer::begin(uint8_t type){
 
   server.on("/logger", HTTP_GET, [](AsyncWebServerRequest *request){
     
-    //strcpy(status.folder_path,IGCFOLDER);
+    strcpy(status.folder_path,IGCFOLDER);
     int paramsNr = request->params();
     log_i("paramsNr: %d", paramsNr);
     if (paramsNr){
@@ -650,7 +650,7 @@ bool WifiServer::begin(uint8_t type){
         log_i("Param value: %s", p->value());
 
         if (p->name()=="folder"){
-//          strcpy(status.folder_path,p->value().c_str());
+          strcpy(status.folder_path,p->value().c_str());
         }
       }
 

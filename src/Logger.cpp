@@ -66,6 +66,7 @@ void Logger::end(void)
   if (!lStop)
   {
     lStop = true;
+    status.logging = false;
     doStopLogger();
   }
 };
@@ -89,7 +90,10 @@ void Logger::run(void)
     while (1)
     {
       char trackFile[64];
-      strcpy(trackFile, status.gps.Date);
+//      strcpy(trackFile, IGCFOLDER);
+      strcpy(trackFile,String(pathDateGPSchar(IGCFOLDER)).c_str());
+//      strcat(trackFile, "/");
+//      strcpy(trackFile, status.gps.Date);
       strcat(trackFile, "_");
       strcat(trackFile, itoa(fnum, fnumc, 10));
       // TODO this will be withouth extension and will be added when closing the igc
@@ -117,22 +121,18 @@ void Logger::run(void)
     }
   }
   // if initilaized and flying/not but gps fix and sat > min sat available
-  //  if(lInit && ( status.flying || (status.GPS_Fix && status.GPS_sat > MIN_SAT_AVAILABLE)) ){
-  if (lInit && (status.flying || (status.gps.NumSat > MIN_SAT_AVAILABLE)))
+  if (lInit && status.flying )
   {
-    //      status.logging = true;
+    status.logging = true;
     updateLogger();
-  }
-
-  // if not flying (or i.e. gps fix lost) for more than 30s
-  if (millis() - gotflytime > 60 * 1000)
-  {
+  }else{
     lInit = false;
-    // stop track close igc
+    status.logging = false;
     if (!lStop)
     {
       lStop = true;
       doStopLogger();
+      status.logging = false;
     }
   }
 }
@@ -151,63 +151,55 @@ void Logger::run(void)
 //    return fullTime;
 //  }
 
-//  char * Logger::pathDateGPSchar(const char* subpath){
-//    // create a global variable for logger igc file name based on GPS datetime
-//    //set today date
-//    static char fullDate[36];
-//    static char full_p[64];
+char * Logger::pathDateGPSchar(const char* subpath) {
+  // create a global variable for logger igc file name based on GPS datetime
+  // set today date
+  static char fullDate[36];
+  static char full_p[64];
 
-//    strcpy(fullDate,"");
-//    // if got a correct date i.e. with year
-//    if (status.gps.Date.year()>0){
-//      char day[3];
-//      itoa(status.gps.Date.day(), day, 10);
-//      if (status.gps.Date.day()<10) strcat(fullDate,"0");
-//      strcat(fullDate, day);
+  strcpy(fullDate, "");
+  // if got a correct date i.e. with year
+  if (status.gps.Date[4] != '\0') {
+      char day[3] = {status.gps.Date[0], status.gps.Date[1], '\0'};
+      char month[3] = {status.gps.Date[2], status.gps.Date[3], '\0'};
+      char year[3] = {status.gps.Date[4], status.gps.Date[5], '\0'};
+      char fyear[5] = {'2', '0', status.gps.Date[4], status.gps.Date[5], '\0'};
 
-//      char month[3];
-//      itoa(status.gps.Date.month(), month, 10);
-//      if (status.gps.Date.month()<10) strcat(fullDate,"0");
-//      strcat(fullDate, month);
+      strcat(fullDate, day);
+      strcat(fullDate, month);
+      strcat(fullDate, year);
 
-//      char year[3];
-//      char fyear[5];
-//      itoa(status.gps.Date.year() - 2000, year, 10);
-//      itoa(status.gps.Date.year(), fyear, 10);
-//      strcat(fullDate, year);
+      strcpy(igcDate, fullDate);
 
-//      strcpy(igcDate, fullDate);
-
-//      // check and create folders
-//      strcpy(full_p,subpath);
-//      strcat(full_p,"/");
-//      strcat(full_p,fyear);
-//  #ifdef LILYGO_S3_E_PAPER_V_1_0
-//      if(!SD.exists(full_p)) SD.mkdir(full_p);
-//      strcat(full_p,"/");
-//      strcat(full_p,month);
-//      if(!SD.exists(full_p)) SD.mkdir(full_p);
-//      strcat(full_p,"/");
-//      strcat(full_p,day);
-//      if(!SD.exists(full_p)) SD.mkdir(full_p);
-//      strcat(full_p,"/");
-//      strcat(full_p,fullDate);
-//  #else
-//      if(!SD_MMC.exists(full_p)) SD_MMC.mkdir(full_p);
-//      strcat(full_p,"/");
-//      strcat(full_p,month);
-//      if(!SD_MMC.exists(full_p)) SD_MMC.mkdir(full_p);
-//      strcat(full_p,"/");
-//      strcat(full_p,day);
-//      if(!SD_MMC.exists(full_p)) SD_MMC.mkdir(full_p);
-//      strcat(full_p,"/");
-//      strcat(full_p,fullDate);
-//  #endif
-
-//    }
-//    //Serial.println(full_p);
-//    return full_p;
-//  }
+      // check and create folders
+      strcpy(full_p, subpath);
+      strcat(full_p, "/");
+      strcat(full_p, fyear);
+#ifdef LILYGO_S3_E_PAPER_V_1_0
+      if (!SD.exists(full_p)) SD.mkdir(full_p);
+      strcat(full_p, "/");
+      strcat(full_p, month);
+      if (!SD.exists(full_p)) SD.mkdir(full_p);
+      strcat(full_p, "/");
+      strcat(full_p, day);
+      if (!SD.exists(full_p)) SD.mkdir(full_p);
+      strcat(full_p, "/");
+      strcat(full_p, fullDate);
+#else
+      if (!SD_MMC.exists(full_p)) SD_MMC.mkdir(full_p);
+      strcat(full_p, "/");
+      strcat(full_p, month);
+      if (!SD_MMC.exists(full_p)) SD_MMC.mkdir(full_p);
+      strcat(full_p, "/");
+      strcat(full_p, day);
+      if (!SD_MMC.exists(full_p)) SD_MMC.mkdir(full_p);
+      strcat(full_p, "/");
+      strcat(full_p, fullDate);
+#endif
+  }
+  // Serial.println(full_p);
+  return full_p;
+}
 
 void Logger::updateHash(const char *row)
 {

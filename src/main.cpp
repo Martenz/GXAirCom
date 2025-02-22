@@ -5757,6 +5757,8 @@ void taskLogger(void * pvPArameters){
 
   bool init_logger = false;
 
+    uint8_t retry = 0;
+
     while(1){
       if(status.sdReady){
         if(!init_logger){
@@ -5765,7 +5767,13 @@ void taskLogger(void * pvPArameters){
             logger.run();  
         }
       }else{
-        break;
+        // Wait SD is ready with retry strategy
+        if(retry < 10){
+          delay(1000);
+          retry++;
+        }else{
+          break;
+        }
       }
 
       if ((WebUpdateRunning) || (bPowerOff)) break;
