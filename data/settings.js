@@ -141,6 +141,7 @@
         document.getElementById('fly_stop_t').value = data.fly_stop_t;
         document.getElementById('min_sat_av').value = data.min_sat_av;
         document.getElementById('utc_offset').value = data.utc_offset;
+        document.getElementById('AircraftType').value = data.AircraftType;
 
         only_once = false;
     }
@@ -152,6 +153,7 @@
 
 function initButtons() {
     document.getElementById('volume').addEventListener('change', onVolumeSpeaker);
+    document.getElementById('AircraftType').addEventListener('change', onAircraftType);
     //document.getElementById('test_speaker').addEventListener('click', onTestSpeaker);
     document.getElementById('wifi_timer').addEventListener('change', onWifiOff);
     document.getElementById('restart').addEventListener('click', onRestartTzI);
@@ -317,6 +319,14 @@ function onVolumeSpeaker(event) {
 
     showLoader();
     websocket.send(JSON.stringify({'speaker':'test','volume':value,'update':true}));
+}
+
+function onAircraftType(event) {
+    var select = document.getElementById('AircraftType');
+    var value = select.options[select.selectedIndex].value.toString();
+
+    showLoader();
+    websocket.send(JSON.stringify({'AircraftType':value,'update':true}));
 }
 
 function onTestSpeaker(event) {

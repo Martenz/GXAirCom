@@ -243,6 +243,8 @@ void WifiServer::wifiNotifyClients(void){
 
     json["vario_curve"] = setting.vario.varioCurve;
 
+    json["AircraftType"] = setting.AircraftType;
+
     char data[2048];
     size_t len = serializeJson(json, data);
 
@@ -278,6 +280,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
               status.bMuting = true;
             }
           }
+          if (jsonData.containsKey("AircraftType")) setting.AircraftType = jsonData["AircraftType"].as<uint8_t>();
           if (jsonData.containsKey("rotation")) setting.displayRotation = jsonData["rotation"].as<uint8_t>();
           //if (jsonData.containsKey("t_refresh")) ...
           if (jsonData.containsKey("beep_when_f")) setting.vario.BeepOnlyWhenFlying = jsonData["beep_when_f"].as<bool>();
