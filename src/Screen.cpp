@@ -781,6 +781,7 @@ void Screen::drawMainScreen(void){
               pEInk->fillRoundRect(108, DY_PILOT - 5, 11, 13, 2, GxEPD_BLACK);
               pEInk->setTextColor(GxEPD_WHITE);
             }else{
+              pEInk->setTextColor(GxEPD_BLACK);
               pEInk->drawRoundRect(108, DY_PILOT - 5, 11, 13, 2, GxEPD_BLACK);
             }
             pEInk->print("F");
@@ -792,6 +793,7 @@ void Screen::drawMainScreen(void){
               pEInk->fillRoundRect(108, DY_PILOT + 10, 11, 13, 2, GxEPD_BLACK);
               pEInk->setTextColor(GxEPD_WHITE);
             }else{
+              pEInk->setTextColor(GxEPD_BLACK);
               pEInk->drawRoundRect(108, DY_PILOT + 10, 11, 13, 2, GxEPD_BLACK);
             }
             pEInk->print("L");
