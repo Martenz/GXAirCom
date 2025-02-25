@@ -61,6 +61,8 @@ private:
   void drawspeaker(int16_t x, int16_t y, int16_t width, int16_t height,uint8_t volume);
   void drawflying(int16_t x, int16_t y, int16_t width, int16_t height,bool flying);
   String getWDir(float dir);
+  uint16_t fan_rx_n;
+  uint16_t leg_rx_n;
   uint8_t stepCount;
   GxEPD2_GFX_BASE_CLASS *pEInk = NULL;
   uint32_t countFullRefresh = 0;

@@ -46,6 +46,10 @@ bool Screen::begin(uint8_t type,int8_t cs,int8_t dc,int8_t rst,int8_t busy,int8_
   bInit = false;
   log_i("starting E-Ink type=%d;cs=%d,dc=%d,rst=%d,busy=%d,clk=%d,din=%d",type,cs,dc,rst,busy,clk,din);
 
+  fan_rx_n = 0;
+  leg_rx_n = 0;
+
+
 #ifndef LILYGO_S3_E_PAPER_V_1_0
 
   if (type == 1){
@@ -777,9 +781,10 @@ void Screen::drawMainScreen(void){
           if (status.fanetTx>0){
             pEInk->setFont(&NotoSansBold6pt7b);
             pEInk->setCursor(110,DY_PILOT + 5);
-            if (status.fanetRx>0){
+            if (status.fanetRx>fan_rx_n){
               pEInk->fillRoundRect(108, DY_PILOT - 5, 11, 13, 2, GxEPD_BLACK);
               pEInk->setTextColor(GxEPD_WHITE);
+              fan_rx_n = status.fanetRx;            
             }else{
               pEInk->setTextColor(GxEPD_BLACK);
               pEInk->drawRoundRect(108, DY_PILOT - 5, 11, 13, 2, GxEPD_BLACK);
@@ -789,9 +794,10 @@ void Screen::drawMainScreen(void){
           if (status.legTx>0){
             pEInk->setFont(&NotoSansBold6pt7b);
             pEInk->setCursor(110,DY_PILOT + 20);
-            if (status.legRx>0){
+            if (status.legRx>leg_rx_n){
               pEInk->fillRoundRect(108, DY_PILOT + 10, 11, 13, 2, GxEPD_BLACK);
               pEInk->setTextColor(GxEPD_WHITE);
+              leg_rx_n = status.legRx;
             }else{
               pEInk->setTextColor(GxEPD_BLACK);
               pEInk->drawRoundRect(108, DY_PILOT + 10, 11, 13, 2, GxEPD_BLACK);
