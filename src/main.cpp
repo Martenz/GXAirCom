@@ -4217,6 +4217,7 @@ void Fanet2FlarmData(FanetLora::trackingData *FanetData,FlarmtrackingData *Flarm
   FlarmDataData->lat = FanetData->lat;
   FlarmDataData->lon = FanetData->lon;
   FlarmDataData->speed = FanetData->speed;
+  FlarmDataData->addressType = (FanetData->addressType) & 0x7F;
 }
 
 void sendLXPW(uint32_t tAct){
@@ -4694,6 +4695,10 @@ void taskStandard(void *pvParameters){
   // create a binary semaphore for task synchronization
   long frequency = FREQUENCY868;
   fanet.setRFMode(setting.RFMode);
+
+  log_i("CHECK RFMode=%d",setting.RFMode);
+  log_i("myDevIdType=%d",setting.myDevIdType);
+
   uint8_t radioChip = RADIO_SX1276;
   if ((setting.boardType == eBoard::T_BEAM_SX1262) || (setting.boardType == eBoard::T_BEAM_S3CORE) || (setting.boardType == eBoard::HELTEC_WIRELESS_STICK_LITE_V3) || (setting.boardType == eBoard::HELTEC_LORA_V3) || (setting.boardType == eBoard::T3S3_SX1262_EPAPER)) radioChip = RADIO_SX1262;
 
