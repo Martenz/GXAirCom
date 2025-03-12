@@ -127,7 +127,10 @@ void Buzzer::run(uint8_t spk_pin){
     ledcWriteTone(LEDC_CHANNEL_0, 0);
     ledcWrite(LEDC_CHANNEL_0, 0);
     ledcDetachPin(spk_pin); 
-    pinMode(spk_pin, INPUT_PULLDOWN); // Set pin as input to avoid residual current
+    
+    // TODO this will not work too much noise, instead use SD pin to GPIO x to shutdown PAM8302 amplifier
+    //  pinMode(spk_pin, INPUT_PULLDOWN); // Set pin as input to avoid residual current
+   
     bzInit = false; 
   }
 
