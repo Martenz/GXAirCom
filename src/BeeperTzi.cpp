@@ -124,7 +124,10 @@ void Buzzer::run(uint8_t spk_pin){
       }
     
   }else{
+    ledcWriteTone(LEDC_CHANNEL_0, 0);
+    ledcWrite(LEDC_CHANNEL_0, 0);
     ledcDetachPin(spk_pin); 
+    pinMode(spk_pin, INPUT_PULLDOWN); // Set pin as input to avoid residual current
     bzInit = false; 
   }
 

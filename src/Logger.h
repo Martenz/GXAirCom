@@ -21,6 +21,7 @@ extern struct SettingsData setting;
 #include "mbedtls/md.h"
 #include "main.h"
 // include local secret for IGC private sha256 key encription
+#include "../tmp/igc_key.h"
 // the file must include:
 #ifndef SHAPRIVATEKEY
   #define SHAPRIVATEKEY "your-private-key"
