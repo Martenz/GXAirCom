@@ -1,1 +1,0 @@
-#define SHAPRIVATEKEY "TzInstuments-Pk1981@Rocks!"
