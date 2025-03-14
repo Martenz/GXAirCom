@@ -61,6 +61,9 @@
 #include "XPowersLib.h"
 #include "TimeDefs.h"
 
+
+//#define SEND_RAW_WIND_DATA
+
 XPowersLibInterface *PMU = NULL;
 
 
@@ -122,10 +125,11 @@ void taskLogger(void *pvParameters);
 #include <WeatherUnderground.h>
 #include <Windy.h>
 
-//#include <DFRobot_SD3031.h>
+#include <DFRobot_SD3031.h>
 #include <RTClib.h>
 
 RTC_DS3231 *pRtc3231 = NULL;
+DFRobot_SD3031 *pRtc3031 = NULL;
 
 #endif
 
@@ -4217,7 +4221,7 @@ void Fanet2FlarmData(FanetLora::trackingData *FanetData,FlarmtrackingData *Flarm
   FlarmDataData->lat = FanetData->lat;
   FlarmDataData->lon = FanetData->lon;
   FlarmDataData->speed = FanetData->speed;
-  FlarmDataData->addressType = (FanetData->addressType) & 0x7F;
+  FlarmDataData->addressType = (FanetData->addressType) & 0x7F; //clear highest bit (is set for FANET-Msg)
 }
 
 void sendLXPW(uint32_t tAct){
@@ -5088,7 +5092,6 @@ void taskStandard(void *pvParameters){
           StaticJsonDocument<500> doc;                      //Memory pool
           char buff[30];
           char msg_buf[500];
-          pWd = &msg_buf[0];
           snprintf (buff,sizeof(buff)-1,"%04d-%02d-%02dT%02d:%02d:%02d+00:00",year(),month(),day(),hour(),minute(),second()); // ISO 8601
           doc["DT"] = buff;
           doc["ID"] = fanet.getDevId(weatherData.devId);
@@ -5203,6 +5206,9 @@ void taskStandard(void *pvParameters){
           //log_i("latlon=%d,%d",nmea.getLatitude(),nmea.getLongitude());
           status.gps.Lat = nmea.getLatitude() / 1000000.;
           status.gps.Lon = nmea.getLongitude() / 1000000.;  
+          //only for testing NZ
+          //status.gps.Lat = -41.0605988;
+          //status.gps.Lon = 175.3534596;  
           #ifdef FLARMTEST
             status.gps.Lat = setting.gs.lat;
             status.gps.Lon = setting.gs.lon;
