@@ -11,6 +11,7 @@
 
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <string.h>
 #include <Wire.h>
 #include <Adafruit_BME280.h>
