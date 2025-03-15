@@ -9,4 +9,6 @@ bin/_copy2server.bat
 bin/scplog.txt
 bin/mqttupdate.py
 _04settings
+GXAirCom.code-workspace
+peet_bros_calculation.xlsx
 tmp
